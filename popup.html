@@ -39,11 +39,21 @@
         font-size: 28px;
         font-weight: bold;
         margin-bottom: 8px;
-        background: linear-gradient(45deg, #ffffff, #10b981, #0ea5e9);
+        background: linear-gradient(45deg, #1e40af, #10b981, #0ea5e9);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+      
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
       }
       
       .tagline {
@@ -646,7 +656,10 @@
   <body>
     <div class="container">
       <div class="header">
-        <div class="logo">🏥 WC - WISE Clinical Assistant</div>
+        <div class="logo">
+          <img src="images/medical_logo.svg" alt="Medical Logo" class="logo-icon">
+          WC - WISE Clinical Assistant
+        </div>
         <div class="tagline">Advanced clinical research tool with intelligent data management</div>
       </div>
       
