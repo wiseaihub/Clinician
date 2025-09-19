@@ -1,26 +1,26 @@
 {
-    "manifest_version": 3,  // Using the latest version
+    "manifest_version": 3,
     "name": "WISE Clinical Context Assistant - WA",
-    "version": "2.0",
+    "version": "2.1",
     "description": "Advanced clinical research tool with local data storage and intelligent website suggestions.",
     "permissions": [
-      "activeTab",       // Permission to access the current browser tab
-      "scripting",       // Permission to run scripts on the page
-      "storage",         // Permission to store research data locally
-      "downloads",       // Permission to save research files
-      "tabs"             // Permission to manage tabs and URLs
+      "activeTab",
+      "scripting",
+      "storage",
+      "downloads",
+      "tabs"
     ],
     "action": {
-      "default_popup": "popup.html", // This file opens when you click the extension icon
-      "default_icon": {              // WISE branded icons
+      "default_popup": "popup.html",
+      "default_icon": {
         "16": "images/icon16.png",
         "32": "images/icon32.png",
         "48": "images/icon48.png"
       }
     },
-    "icons": {                       // WISE branded icons
+    "icons": {
       "16": "images/icon16.png",
       "32": "images/icon32.png",
       "48": "images/icon48.png"
     }
-  }
+}
