@@ -28,27 +28,80 @@ let researchData = {
 
 // ==================== MEDICAL WEBSITE DATABASE ====================
 const MEDICAL_WEBSITES = {
-  'diabetes': [
-    { name: 'Mayo Clinic - Diabetes', url: 'https://www.mayoclinic.org/diseases-conditions/diabetes', category: 'comprehensive' },
-    { name: 'WebMD - Diabetes Center', url: 'https://www.webmd.com/diabetes/default.htm', category: 'patient' },
-    { name: 'American Diabetes Association', url: 'https://www.diabetes.org/', category: 'professional' },
-    { name: 'PubMed - Diabetes Research', url: 'https://pubmed.ncbi.nlm.nih.gov/?term=diabetes', category: 'research' }
+  // Academic & Research Sources
+  'academic': [
+    { name: 'PubMed', url: 'https://pubmed.ncbi.nlm.nih.gov/', category: 'research', description: 'Biomedical literature database' },
+    { name: 'EMBASE', url: 'https://www.embase.com/', category: 'research', description: 'Biomedical and pharmacological database' },
+    { name: 'Cochrane Library', url: 'https://www.cochranelibrary.com/', category: 'research', description: 'Systematic reviews and meta-analyses' },
+    { name: 'PubMed Central (PMC)', url: 'https://www.ncbi.nlm.nih.gov/pmc/', category: 'research', description: 'Free full-text articles' },
+    { name: 'Google Scholar', url: 'https://scholar.google.com/', category: 'research', description: 'Academic search engine' },
+    { name: 'Scopus', url: 'https://www.scopus.com/', category: 'research', description: 'Abstract and citation database' },
+    { name: 'Web of Science', url: 'https://www.webofscience.com/', category: 'research', description: 'Citation database' },
+    { name: 'ScienceDirect', url: 'https://www.sciencedirect.com/', category: 'research', description: 'Elsevier research platform' },
+    { name: 'arXiv', url: 'https://arxiv.org/', category: 'research', description: 'Preprint server' },
+    { name: 'ResearchGate', url: 'https://www.researchgate.net/', category: 'research', description: 'Academic social network' },
+    { name: 'Academia.edu', url: 'https://www.academia.edu/', category: 'research', description: 'Academic papers platform' },
+    { name: 'DOAJ', url: 'https://doaj.org/', category: 'research', description: 'Directory of Open Access Journals' },
+    { name: 'CORE', url: 'https://core.ac.uk/', category: 'research', description: 'Open access research aggregator' }
   ],
-  'hypertension': [
-    { name: 'Mayo Clinic - High Blood Pressure', url: 'https://www.mayoclinic.org/diseases-conditions/high-blood-pressure', category: 'comprehensive' },
-    { name: 'American Heart Association', url: 'https://www.heart.org/en/health-topics/high-blood-pressure', category: 'professional' },
-    { name: 'WebMD - Hypertension', url: 'https://www.webmd.com/hypertension-high-blood-pressure/default.htm', category: 'patient' }
+  
+  // Medical Journals
+  'journals': [
+    { name: 'The Lancet', url: 'https://www.thelancet.com/', category: 'journal', description: 'High-impact general medicine journal' },
+    { name: 'NEJM', url: 'https://www.nejm.org/', category: 'journal', description: 'New England Journal of Medicine' },
+    { name: 'JAMA', url: 'https://jamanetwork.com/', category: 'journal', description: 'Journal of American Medical Association' },
+    { name: 'BMJ', url: 'https://www.bmj.com/', category: 'journal', description: 'British Medical Journal' },
+    { name: 'Nature Medicine', url: 'https://www.nature.com/nm/', category: 'journal', description: 'Nature Medicine journal' },
+    { name: 'Science', url: 'https://www.science.org/', category: 'journal', description: 'Science journal' }
   ],
-  'covid': [
-    { name: 'WHO - COVID-19', url: 'https://www.who.int/health-topics/coronavirus', category: 'official' },
-    { name: 'CDC - COVID-19', url: 'https://www.cdc.gov/coronavirus/2019-ncov/index.html', category: 'official' },
-    { name: 'PubMed - COVID Research', url: 'https://pubmed.ncbi.nlm.nih.gov/?term=covid-19', category: 'research' }
+  
+  // Clinical Resources
+  'clinical': [
+    { name: 'UpToDate', url: 'https://www.uptodate.com/', category: 'clinical', description: 'Clinical decision support' },
+    { name: 'Mayo Clinic', url: 'https://www.mayoclinic.org/', category: 'clinical', description: 'Comprehensive medical information' },
+    { name: 'Cleveland Clinic', url: 'https://my.clevelandclinic.org/', category: 'clinical', description: 'Medical center resources' },
+    { name: 'Johns Hopkins Medicine', url: 'https://www.hopkinsmedicine.org/', category: 'clinical', description: 'Medical center' },
+    { name: 'NYU Langone Health', url: 'https://nyulangone.org/', category: 'clinical', description: 'Medical center' },
+    { name: 'Barts Health', url: 'https://www.bartshealth.nhs.uk/', category: 'clinical', description: 'UK NHS trust' },
+    { name: 'CRGH', url: 'https://www.crgh.co.uk/', category: 'clinical', description: 'Centre for Reproductive and Genetic Health' }
   ],
-  'cancer': [
-    { name: 'National Cancer Institute', url: 'https://www.cancer.gov/', category: 'official' },
-    { name: 'Mayo Clinic - Cancer', url: 'https://www.mayoclinic.org/diseases-conditions/cancer', category: 'comprehensive' },
-    { name: 'American Cancer Society', url: 'https://www.cancer.org/', category: 'patient' }
+  
+  // Specialized Healthcare
+  'specialized': [
+    { name: 'Hertility Health', url: 'https://hertilityhealth.com/', category: 'specialized', description: 'Reproductive health' },
+    { name: 'Kin Fertility', url: 'https://kinfertility.com/', category: 'specialized', description: 'Fertility care' },
+    { name: 'Adonis', url: 'https://www.adonis.com/', category: 'specialized', description: 'Men\'s health' },
+    { name: 'Breastcancer.org', url: 'https://www.breastcancer.org/', category: 'specialized', description: 'Breast cancer resources' },
+    { name: 'Dr. Rossinski Dental Health', url: 'https://www.drrossinski.com/', category: 'specialized', description: 'Dental health' }
   ],
+  
+  // Mental Health & Wellness
+  'mental_health': [
+    { name: 'Unmind', url: 'https://www.unmind.com/', category: 'mental_health', description: 'Workplace mental health' },
+    { name: 'Campaign Against Living Miserably', url: 'https://www.thecalmzone.net/', category: 'mental_health', description: 'Mental health support' },
+    { name: 'Thanks Ben', url: 'https://thanksben.com/', category: 'mental_health', description: 'Mental health platform' }
+  ],
+  
+  // Technology & Innovation
+  'healthtech': [
+    { name: 'Merative', url: 'https://www.merative.com/', category: 'healthtech', description: 'Healthcare technology' },
+    { name: 'Acronis', url: 'https://www.acronis.com/', category: 'healthtech', description: 'Data protection' },
+    { name: 'Talkdesk', url: 'https://www.talkdesk.com/', category: 'healthtech', description: 'Contact center' },
+    { name: 'CVS Health', url: 'https://www.cvshealth.com/', category: 'healthtech', description: 'Healthcare services' },
+    { name: 'Snowflake', url: 'https://www.snowflake.com/', category: 'healthtech', description: 'Data cloud' },
+    { name: 'Palo Alto Networks', url: 'https://www.paloaltonetworks.com/', category: 'healthtech', description: 'Cybersecurity' },
+    { name: 'Narsa', url: 'https://www.narsa.com/', category: 'healthtech', description: 'Healthcare solutions' },
+    { name: 'Juniper', url: 'https://www.juniper.net/', category: 'healthtech', description: 'Network solutions' },
+    { name: 'Klara', url: 'https://www.klara.com/', category: 'healthtech', description: 'Patient communication' }
+  ],
+  
+  // General Medical Information
+  'general': [
+    { name: 'WebMD', url: 'https://www.webmd.com/', category: 'general', description: 'General medical information' },
+    { name: 'Abortion Finder', url: 'https://www.abortionfinder.org/', category: 'general', description: 'Reproductive health services' }
+  ],
+  
+  // Default fallback
   'default': [
     { name: 'Mayo Clinic', url: 'https://www.mayoclinic.org/diseases-conditions', category: 'comprehensive' },
     { name: 'WebMD A-Z', url: 'https://www.webmd.com/a-to-z-guides/common-topics', category: 'patient' },
@@ -948,5 +1001,132 @@ async function initialize() {
   }
 }
 
+// ==================== NEW FEATURE EVENT LISTENERS ====================
+
+// Sub-tab switching functionality
+function setupSubTabs() {
+  const subTabs = document.querySelectorAll('.sub-tab');
+  subTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const subtabType = tab.dataset.subtab;
+      
+      // Update active sub-tab
+      subTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      // Show/hide content
+      document.querySelectorAll('.sub-tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(`${subtabType}Content`).classList.add('active');
+    });
+  });
+}
+
+// Storage path update functionality
+function setupStoragePathUpdate() {
+  const updateButton = document.getElementById('updateStoragePath');
+  const storageInput = document.getElementById('storagePathInput');
+  
+  if (updateButton && storageInput) {
+    updateButton.addEventListener('click', () => {
+      const newPath = storageInput.value.trim();
+      if (newPath) {
+        // Save to chrome storage
+        chrome.storage.local.set({ storagePath: newPath }, () => {
+          showNotification('Storage path updated successfully!', 'success');
+        });
+      }
+    });
+  }
+}
+
+// Dynamic link suggestions based on search
+function getDynamicSuggestions(searchTerm) {
+  const suggestions = [];
+  const term = searchTerm.toLowerCase();
+  
+  // Add relevant sources based on search term
+  Object.keys(MEDICAL_WEBSITES).forEach(category => {
+    if (category === 'default') return;
+    
+    const sources = MEDICAL_WEBSITES[category];
+    sources.forEach(source => {
+      // Check if search term matches category or source name
+      if (source.name.toLowerCase().includes(term) || 
+          source.description.toLowerCase().includes(term) ||
+          category.includes(term)) {
+        suggestions.push({ ...source, category });
+      }
+    });
+  });
+  
+  // Add some default suggestions if no matches
+  if (suggestions.length === 0) {
+    suggestions.push(...MEDICAL_WEBSITES.academic.slice(0, 3));
+    suggestions.push(...MEDICAL_WEBSITES.journals.slice(0, 2));
+    suggestions.push(...MEDICAL_WEBSITES.clinical.slice(0, 2));
+  }
+  
+  return suggestions.slice(0, 8); // Limit to 8 suggestions
+}
+
+// Enhanced search functionality
+function performEnhancedSearch() {
+  const searchTerm = elements.diseaseSearch.value.trim();
+  if (!searchTerm) return;
+  
+  // Get dynamic suggestions
+  const suggestions = getDynamicSuggestions(searchTerm);
+  
+  // Update the sites list with new suggestions
+  updateSitesList(suggestions);
+  
+  // Show the suggested sites section
+  elements.suggestedSites.style.display = 'block';
+  
+  // Show the actions tab after search
+  const actionsTab = document.querySelector('[data-subtab="actions"]');
+  if (actionsTab) {
+    actionsTab.style.display = 'block';
+  }
+}
+
+// Update sites list with new format
+function updateSitesList(suggestions) {
+  const sitesList = document.getElementById('sitesList');
+  if (!sitesList) return;
+  
+  sitesList.innerHTML = '';
+  
+  suggestions.forEach(site => {
+    const siteItem = document.createElement('div');
+    siteItem.className = 'site-item';
+    siteItem.innerHTML = `
+      <div class="site-info">
+        <div class="site-name">${site.name}</div>
+        <div class="site-description">${site.description || 'Medical resource'}</div>
+        <div class="site-category">${site.category}</div>
+      </div>
+      <div class="site-actions">
+        <button class="btn btn-primary" onclick="window.open('${site.url}', '_blank')">
+          🔗 Visit
+        </button>
+      </div>
+    `;
+    sitesList.appendChild(siteItem);
+  });
+}
+
 // Start the application
-document.addEventListener('DOMContentLoaded', initialize);
+document.addEventListener('DOMContentLoaded', () => {
+  initialize();
+  setupSubTabs();
+  setupStoragePathUpdate();
+  
+  // Override the search button click to use enhanced search
+  if (elements.searchButton) {
+    elements.searchButton.removeEventListener('click', performSearch);
+    elements.searchButton.addEventListener('click', performEnhancedSearch);
+  }
+});

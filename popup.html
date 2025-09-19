@@ -13,7 +13,7 @@
         max-height: 800px;
         padding: 20px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 50%, #10b981 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #dc2626 50%, #fbbf24 100%);
         color: white;
         margin: 0;
         overflow-y: auto;
@@ -36,13 +36,14 @@
       }
       
       .logo {
-        font-size: 24px;
+        font-size: 28px;
         font-weight: bold;
         margin-bottom: 8px;
-        background: linear-gradient(45deg, #fff, #e0e7ff);
+        background: linear-gradient(45deg, #ffffff, #fbbf24, #dc2626);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
       }
       
       .tagline {
@@ -60,24 +61,63 @@
       }
       
       .tab {
-        padding: 10px 20px;
+        padding: 12px 20px;
         cursor: pointer;
-        border-bottom: 2px solid transparent;
+        border-bottom: 3px solid transparent;
         transition: all 0.3s ease;
-        font-weight: 500;
+        font-weight: 600;
+        border-radius: 8px 8px 0 0;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
       }
       
       .tab.active {
-        border-bottom-color: #4facfe;
-        background: rgba(79, 172, 254, 0.1);
+        border-bottom-color: #ffffff;
+        background: linear-gradient(135deg, #dc2626 0%, #fbbf24 100%);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
       }
       
       .tab:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
       }
       
       .tab-content {
         display: none;
+      }
+      
+      .sub-tabs {
+        display: flex;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .sub-tab {
+        padding: 8px 16px;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        font-size: 14px;
+        opacity: 0.7;
+      }
+      
+      .sub-tab.active {
+        border-bottom-color: #fbbf24;
+        background: rgba(251, 191, 36, 0.1);
+        opacity: 1;
+      }
+      
+      .sub-tab:hover {
+        background: rgba(255, 255, 255, 0.1);
+        opacity: 1;
+      }
+      
+      .sub-tab-content {
+        display: none;
+      }
+      
+      .sub-tab-content.active {
+        display: block;
       }
       
       .tab-content.active {
@@ -120,8 +160,8 @@
         height: 36px !important;
         border-radius: 50%;
         font-weight: 600;
-        background: linear-gradient(45deg, #10b981 0%, #059669 100%);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        background: linear-gradient(45deg, #dc2626 0%, #fbbf24 100%);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -148,8 +188,8 @@
       
       .search-btn:hover {
         transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        background: linear-gradient(45deg, #059669 0%, #047857 100%);
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
+        background: linear-gradient(45deg, #b91c1c 0%, #d97706 100%);
       }
       
       .search-btn:active {
@@ -215,15 +255,15 @@
       }
       
       .btn-primary {
-        background: linear-gradient(45deg, #0ea5e9 0%, #0284c7 100%);
+        background: linear-gradient(45deg, #dc2626 0%, #b91c1c 100%);
         color: white;
-        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
       }
       
       .btn-success {
-        background: linear-gradient(45deg, #10b981 0%, #059669 100%);
+        background: linear-gradient(45deg, #fbbf24 0%, #d97706 100%);
         color: white;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
       }
       
       .btn-warning {
@@ -552,7 +592,7 @@
   <body>
     <div class="container">
       <div class="header">
-        <div class="logo">🏥 WISE Clinical Research Assistant</div>
+        <div class="logo">🏥 WC - WISE Clinical Assistant</div>
         <div class="tagline">Advanced clinical research tool with intelligent data management</div>
       </div>
       
@@ -582,15 +622,23 @@
           </div>
         </div>
         
+        <!-- Links Tab -->
         <div class="suggested-sites" id="suggestedSites" style="display: none;">
-          <h3 style="margin: 0 0 15px 0; font-size: 16px;">🌐 Suggested Medical Websites</h3>
-          <div id="sitesList"></div>
-        </div>
-        
-        <div class="action-bar">
-          <button id="analyzePage" class="btn btn-primary">🔍 Analyze Current Page</button>
-          <button id="addToRepo" class="btn btn-success" disabled>📚 Add to Research Repo</button>
-          <button id="changeTopic" class="btn btn-warning" style="display: none;">🔄 Change Topic</button>
+          <div class="sub-tabs">
+            <div class="sub-tab active" data-subtab="links">🌐 Suggested Websites</div>
+            <div class="sub-tab" data-subtab="actions" style="display: none;">⚡ Actions</div>
+          </div>
+          <div class="sub-tab-content" id="linksContent">
+            <h3 style="margin: 15px 0; font-size: 16px;">🔬 Medical Research Sources</h3>
+            <div id="sitesList"></div>
+          </div>
+          <div class="sub-tab-content" id="actionsContent" style="display: none;">
+            <div class="action-bar">
+              <button id="analyzePage" class="btn btn-primary">🔍 Analyze Current Page</button>
+              <button id="addToRepo" class="btn btn-success" disabled>📚 Add to Research Repo</button>
+              <button id="changeTopic" class="btn btn-warning" style="display: none;">🔄 Change Topic</button>
+            </div>
+          </div>
         </div>
         
         <div id="output">
@@ -650,7 +698,12 @@
               <div style="font-weight: 500;">Local File Storage</div>
               <div style="font-size: 12px; opacity: 0.8;">Save research data to local machine</div>
               <div id="storagePath" style="font-size: 11px; opacity: 0.7; margin-top: 5px; display: none;">
-                <span class="emoji">📁</span>Default: Downloads/WISE Clinician Assistant/
+                <span class="emoji">📁</span>Storage Path: 
+                <input type="text" id="storagePathInput" value="Downloads/WISE Clinician Assistant/" 
+                       style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); 
+                              border-radius: 4px; padding: 4px 8px; color: white; font-size: 11px; 
+                              width: 200px; margin-left: 5px;">
+                <button id="updateStoragePath" class="btn btn-primary" style="padding: 4px 8px; font-size: 11px; margin-left: 5px;">Update</button>
               </div>
             </div>
             <div class="toggle" id="localStorageToggle"></div>
