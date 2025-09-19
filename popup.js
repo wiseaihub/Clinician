@@ -948,25 +948,13 @@ ${feedback.message}
 Sent from WISE Clinical Assistant Chrome Extension
     `.trim();
     
-    // Create mailto link
+    // Create mailto link with auto-filled fields
     const mailtoLink = `mailto:wiseaihub@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     
-    // Try to copy email content to clipboard as alternative
-    const emailContent = `To: wiseaihub@gmail.com\nSubject: ${subject}\n\n${body}`;
+    // Open email client with auto-filled content
+    window.open(mailtoLink, '_blank');
     
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(emailContent).then(() => {
-        showNotification('Email content copied to clipboard! You can paste it into your email client.', 'success');
-      }).catch(() => {
-        // Fallback to mailto
-        window.open(mailtoLink, '_blank');
-        showNotification('Email client opened with your feedback!', 'success');
-      });
-    } else {
-      // Fallback to mailto
-      window.open(mailtoLink, '_blank');
-      showNotification('Email client opened with your feedback!', 'success');
-    }
+    showNotification('Email client opened with your feedback!', 'success');
     
     elements.feedbackForm.style.display = 'none';
     
@@ -1019,9 +1007,12 @@ async function initialize() {
 // Sub-tab switching functionality
 function setupSubTabs() {
   const subTabs = document.querySelectorAll('.sub-tab');
+  console.log('Found sub-tabs:', subTabs.length);
   subTabs.forEach(tab => {
+    console.log('Setting up tab:', tab.dataset.subtab);
     tab.addEventListener('click', () => {
       const subtabType = tab.dataset.subtab;
+      console.log('Tab clicked:', subtabType);
       switchToSubTab(subtabType);
     });
   });
@@ -1142,6 +1133,9 @@ function performEnhancedSearch() {
   const searchTerm = elements.diseaseSearch.value.trim();
   if (!searchTerm) return;
   
+  // Store the current search term
+  researchData.currentSearchTerm = searchTerm;
+  
   // Get dynamic suggestions
   const suggestions = getDynamicSuggestions(searchTerm);
   
@@ -1161,7 +1155,7 @@ function performEnhancedSearch() {
   switchToSubTab('links');
   
   // Show notification
-  showNotification('Suggested medical sources loaded! Click on a website to visit, then use Actions tab to analyze.', 'success');
+  showNotification(`Found ${suggestions.length} medical sources for "${searchTerm}". Click on a website to visit, then use Actions tab to analyze.`, 'success');
 }
 
 // Update sites list with new format
@@ -1241,6 +1235,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (elements.searchButton) {
     elements.searchButton.removeEventListener('click', performSearch);
     elements.searchButton.addEventListener('click', performEnhancedSearch);
+  }
+  
+  // Add real-time search as user types
+  if (elements.diseaseSearch) {
+    elements.diseaseSearch.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.trim();
+      if (searchTerm.length > 2) {
+        const suggestions = getDynamicSuggestions(searchTerm);
+        updateSitesList(suggestions);
+        elements.suggestedSites.style.display = 'block';
+        switchToSubTab('links');
+      }
+    });
   }
   
   // Show default suggestions on load
