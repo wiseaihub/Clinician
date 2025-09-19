@@ -918,6 +918,12 @@ function showFeedbackForm(type) {
   elements.feedbackForm.style.display = 'block';
 }
 
+// Email validation function
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
 async function submitFeedback() {
   const feedback = {
     name: elements.feedbackName.value,
@@ -929,6 +935,11 @@ async function submitFeedback() {
   
   if (!feedback.name || !feedback.message) {
     showNotification('Please fill in required fields.', 'error');
+    return;
+  }
+  
+  if (feedback.email && !validateEmail(feedback.email)) {
+    showNotification('Please enter a valid email address.', 'error');
     return;
   }
   
@@ -1066,6 +1077,7 @@ function setupStoragePathUpdate() {
 
 // Dynamic link suggestions based on search
 function getDynamicSuggestions(searchTerm) {
+  console.log('Getting dynamic suggestions for:', searchTerm);
   const suggestions = [];
   const term = searchTerm.toLowerCase();
   const scoredSources = [];
@@ -1100,6 +1112,8 @@ function getDynamicSuggestions(searchTerm) {
     });
   });
   
+  console.log('Found scored sources:', scoredSources.length);
+  
   // Sort by score (highest first)
   scoredSources.sort((a, b) => b.score - a.score);
   
@@ -1125,7 +1139,9 @@ function getDynamicSuggestions(searchTerm) {
     });
   }
   
-  return suggestions.slice(0, 12); // Show up to 12 suggestions
+  const finalSuggestions = suggestions.slice(0, 12);
+  console.log('Final suggestions:', finalSuggestions.length, finalSuggestions.map(s => s.name));
+  return finalSuggestions;
 }
 
 // Enhanced search functionality
