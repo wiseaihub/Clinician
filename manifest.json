@@ -1,11 +1,14 @@
 {
     "manifest_version": 3,  // Using the latest version
     "name": "WISE Clinical Context Assistant - WA",
-    "version": "1.0",
-    "description": "Summarizes medical webpages and extracts key info.",
+    "version": "2.0",
+    "description": "Advanced clinical research tool with local data storage and intelligent website suggestions.",
     "permissions": [
       "activeTab",       // Permission to access the current browser tab
-      "scripting"        // Permission to run scripts on the page
+      "scripting",       // Permission to run scripts on the page
+      "storage",         // Permission to store research data locally
+      "downloads",       // Permission to save research files
+      "tabs"             // Permission to manage tabs and URLs
     ],
     "action": {
       "default_popup": "popup.html", // This file opens when you click the extension icon

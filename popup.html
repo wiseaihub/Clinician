@@ -3,11 +3,15 @@
   <head>
     <meta charset="utf-8">
     <style>
+      * {
+        box-sizing: border-box;
+      }
+      
       body {
-        width: 520px;
-        min-height: 280px;
-        max-height: 600px;
-        padding: 25px;
+        width: 800px;
+        min-height: 600px;
+        max-height: 800px;
+        padding: 20px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
@@ -32,14 +36,13 @@
       }
       
       .logo {
-        font-size: 26px;
+        font-size: 24px;
         font-weight: bold;
         margin-bottom: 8px;
         background: linear-gradient(45deg, #fff, #e0e7ff);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
       
       .tagline {
@@ -50,63 +53,173 @@
         font-weight: 300;
       }
       
+      .tabs {
+        display: flex;
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.3s ease;
+        font-weight: 500;
+      }
+      
+      .tab.active {
+        border-bottom-color: #4facfe;
+        background: rgba(79, 172, 254, 0.1);
+      }
+      
+      .tab:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      .tab-content {
+        display: none;
+      }
+      
+      .tab-content.active {
+        display: block;
+      }
+      
+      .search-section {
+        margin-bottom: 20px;
+      }
+      
+      .search-box {
+        width: 100%;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 25px;
+        font-size: 16px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #2d3748;
+        margin-bottom: 15px;
+      }
+      
+      .search-box::placeholder {
+        color: #718096;
+      }
+      
+      .suggested-sites {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      
+      .site-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        margin: 5px 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+      
+      .site-item:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateX(5px);
+      }
+      
+      .site-status {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-weight: 600;
+      }
+      
+      .status-visited { background: #ffc107; color: #000; }
+      .status-analyzed { background: #17a2b8; color: #fff; }
+      .status-saved { background: #28a745; color: #fff; }
+      
       .action-bar {
         display: flex;
         gap: 10px;
         margin-bottom: 20px;
         align-items: center;
+        flex-wrap: wrap;
       }
       
-      #analyzePage {
-        flex: 1;
-        padding: 14px 20px;
-        background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
-        color: white;
+      .btn {
+        padding: 12px 20px;
         border: none;
         border-radius: 25px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
-      }
-      
-      #copyButton {
-        padding: 12px 16px;
-        background: linear-gradient(45deg, #48bb78 0%, #38a169 100%);
-        color: white;
-        border: none;
-        border-radius: 20px;
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
         white-space: nowrap;
       }
       
-      #analyzePage:hover, #copyButton:hover {
+      .btn-primary {
+        background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+      }
+      
+      .btn-success {
+        background: linear-gradient(45deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+      }
+      
+      .btn-warning {
+        background: linear-gradient(45deg, #ed8936 0%, #dd6b20 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
+      }
+      
+      .btn-info {
+        background: linear-gradient(45deg, #4299e1 0%, #3182ce 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+      }
+      
+      .btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
       }
       
-      #analyzePage:active, #copyButton:active {
-        transform: translateY(0);
-      }
-      
-      #analyzePage:disabled, #copyButton:disabled {
+      .btn:disabled {
         background: linear-gradient(45deg, #ccc, #999);
         cursor: not-allowed;
         transform: none;
         box-shadow: none;
       }
       
-      .help-text {
+      .current-topic {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        border-left: 4px solid #4facfe;
+      }
+      
+      .topic-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      
+      .topic-name {
+        font-weight: 600;
+        font-size: 16px;
+      }
+      
+      .topic-stats {
         font-size: 12px;
         opacity: 0.8;
-        text-align: center;
-        margin-bottom: 15px;
-        font-style: italic;
       }
       
       #output {
@@ -114,12 +227,12 @@
         color: #2d3748;
         padding: 20px;
         border-radius: 12px;
-        min-height: 60px;
+        min-height: 200px;
         font-size: 14px;
         line-height: 1.6;
         border-left: 5px solid #4facfe;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        max-height: 350px;
+        max-height: 400px;
         overflow-y: auto;
       }
       
@@ -188,13 +301,161 @@
         vertical-align: middle;
       }
       
-      .copy-feedback {
+      .research-repo {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      
+      .repo-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 8px;
+        border-left: 3px solid #4facfe;
+      }
+      
+      .repo-item h4 {
+        margin: 0 0 5px 0;
+        font-size: 14px;
+        color: #fff;
+      }
+      
+      .repo-item p {
+        margin: 0;
+        font-size: 12px;
+        opacity: 0.8;
+      }
+      
+      .insights-section {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      
+      .insight-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 8px;
+        border-left: 3px solid #ffc107;
+      }
+      
+      .settings-section {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      
+      .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .setting-item:last-child {
+        border-bottom: none;
+      }
+      
+      .toggle {
+        position: relative;
+        width: 50px;
+        height: 24px;
+        background: #ccc;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      
+      .toggle.active {
+        background: #4facfe;
+      }
+      
+      .toggle::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.3s;
+      }
+      
+      .toggle.active::after {
+        transform: translateX(26px);
+      }
+      
+      .help-section {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      
+      .help-item {
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+      }
+      
+      .help-item:last-child {
+        border-bottom: none;
+      }
+      
+      .help-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 8px 12px;
+      }
+      
+      .feedback-form {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      
+      .form-group {
+        margin-bottom: 15px;
+      }
+      
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
+      
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        width: 100%;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #2d3748;
+        font-size: 14px;
+      }
+      
+      .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+      
+      .notification {
         position: fixed;
         top: 20px;
         right: 20px;
         background: #48bb78;
         color: white;
-        padding: 10px 15px;
+        padding: 12px 20px;
         border-radius: 8px;
         font-size: 14px;
         font-weight: 600;
@@ -205,77 +466,197 @@
         transition: all 0.3s ease;
       }
       
-      .copy-feedback.show {
+      .notification.show {
         opacity: 1;
         transform: translateY(0);
       }
       
-      a {
-        color: #4facfe;
-        text-decoration: none;
-        font-weight: 500;
+      .notification.error {
+        background: #e53e3e;
       }
       
-      a:hover {
-        text-decoration: underline;
-        color: #667eea;
+      .notification.warning {
+        background: #ed8936;
       }
       
-      .section-content a {
-        color: #4a5568;
-        border-bottom: 1px dotted #4facfe;
-      }
-      
-      .section-content a:hover {
-        color: #667eea;
-        border-bottom: 1px solid #667eea;
-      }
-      
-      .suggestion-note {
-        background: #fff3cd;
-        color: #856404;
-        padding: 12px;
-        border-radius: 8px;
-        margin-top: 15px;
-        border-left: 4px solid #ffc107;
-        font-size: 13px;
+      @media (max-width: 600px) {
+        body {
+          width: 100%;
+          padding: 10px;
+        }
+        
+        .action-bar {
+          flex-direction: column;
+        }
+        
+        .btn {
+          width: 100%;
+          margin-bottom: 10px;
+        }
       }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <div class="logo">WISE Clinical Context Assistant - WA</div>
-        <div class="tagline">Instant clinical insights from any medical webpage</div>
+        <div class="logo">🏥 WISE Clinical Research Assistant</div>
+        <div class="tagline">Advanced clinical research tool with intelligent data management</div>
       </div>
       
-      <div class="action-bar">
-        <button id="analyzePage">🔍 Analyze Page</button>
-        <button id="copyButton" disabled>📋 Copy Results</button>
+      <div class="tabs">
+        <div class="tab active" data-tab="research">🔍 Research</div>
+        <div class="tab" data-tab="repository">📚 Repository</div>
+        <div class="tab" data-tab="insights">📊 Insights</div>
+        <div class="tab" data-tab="settings">⚙️ Settings</div>
+        <div class="tab" data-tab="help">❓ Help</div>
       </div>
       
-      <div class="help-text">Click "Analyze Page" to extract clinical insights, then "Copy Results" to paste into your documents</div>
-      
-      <div id="output">
-        <div class="output-section">
-          <div class="section-title"><span class="emoji">👋</span>Ready to Analyze</div>
-          <div class="section-content">Navigate to a medical webpage and click Analyze to get started.</div>
-        </div>
-        <div class="output-section">
-          <div class="section-title"><span class="emoji">🌐</span>Recommended Medical Websites</div>
-          <div class="section-content">
-            <strong>For Best Results:</strong><br>
-            • <a href="https://www.mayoclinic.org/diseases-conditions" target="_blank">Mayo Clinic</a><br>
-            • <a href="https://www.webmd.com/a-to-z-guides/common-topics" target="_blank">WebMD A-Z</a><br>
-            • <a href="https://medlineplus.gov/healthtopics.html" target="_blank">MedlinePlus</a><br>
-            • <a href="https://www.ncbi.nlm.nih.gov/pmc/" target="_blank">PubMed Central</a><br>
-            • <a href="https://www.who.int/health-topics" target="_blank">WHO Health Topics</a>
+      <!-- Research Tab -->
+      <div class="tab-content active" id="research-tab">
+        <div class="search-section">
+          <input type="text" id="diseaseSearch" class="search-box" placeholder="Enter disease, symptom, or medical condition...">
+          <div class="current-topic" id="currentTopic" style="display: none;">
+            <div class="topic-header">
+              <div class="topic-name" id="topicName">Current Research Topic</div>
+              <div class="topic-stats" id="topicStats">0 saved, 0 analyzed</div>
+            </div>
+            <div style="font-size: 12px; opacity: 0.8;">
+              <span class="emoji">💡</span>Click on suggested websites below to start your research
+            </div>
           </div>
+        </div>
+        
+        <div class="suggested-sites" id="suggestedSites" style="display: none;">
+          <h3 style="margin: 0 0 15px 0; font-size: 16px;">🌐 Suggested Medical Websites</h3>
+          <div id="sitesList"></div>
+        </div>
+        
+        <div class="action-bar">
+          <button id="analyzePage" class="btn btn-primary">🔍 Analyze Current Page</button>
+          <button id="addToRepo" class="btn btn-success" disabled>📚 Add to Research Repo</button>
+          <button id="changeTopic" class="btn btn-warning" style="display: none;">🔄 Change Topic</button>
+          <button id="exportData" class="btn btn-info">💾 Export Research Data</button>
+        </div>
+        
+        <div id="output">
+          <div class="output-section">
+            <div class="section-title"><span class="emoji">👋</span>Ready to Research</div>
+            <div class="section-content">
+              Enter a disease or symptom above to get started with intelligent website suggestions, 
+              or click "Analyze Current Page" to analyze the webpage you're currently viewing.
+            </div>
+          </div>
+          <div class="output-section">
+            <div class="section-title"><span class="emoji">🎯</span>Research Workflow</div>
+            <div class="section-content">
+              1. <strong>Search:</strong> Enter your medical topic<br>
+              2. <strong>Browse:</strong> Click suggested websites<br>
+              3. <strong>Analyze:</strong> Get AI-powered insights<br>
+              4. <strong>Save:</strong> Add valuable findings to your repository<br>
+              5. <strong>Compare:</strong> Review insights and conflicting views
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Repository Tab -->
+      <div class="tab-content" id="repository-tab">
+        <div class="research-repo">
+          <h3 style="margin: 0 0 15px 0; font-size: 16px;">📚 Your Research Repository</h3>
+          <div id="repoList">
+            <div style="text-align: center; opacity: 0.7; padding: 20px;">
+              <span class="emoji">📝</span>No research saved yet. Start analyzing pages to build your repository!
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Insights Tab -->
+      <div class="tab-content" id="insights-tab">
+        <div class="insights-section">
+          <h3 style="margin: 0 0 15px 0; font-size: 16px;">📊 Research Insights</h3>
+          <div id="insightsList">
+            <div style="text-align: center; opacity: 0.7; padding: 20px;">
+              <span class="emoji">🔍</span>Analyze and save research to see insights and comparisons!
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Settings Tab -->
+      <div class="tab-content" id="settings-tab">
+        <div class="settings-section">
+          <h3 style="margin: 0 0 15px 0; font-size: 16px;">⚙️ Settings</h3>
+          <div class="setting-item">
+            <div>
+              <div style="font-weight: 500;">Local File Storage</div>
+              <div style="font-size: 12px; opacity: 0.8;">Save research data to local machine</div>
+            </div>
+            <div class="toggle" id="localStorageToggle"></div>
+          </div>
+          <div class="setting-item">
+            <div>
+              <div style="font-weight: 500;">Auto-suggest Websites</div>
+              <div style="font-size: 12px; opacity: 0.8;">Automatically suggest relevant medical websites</div>
+            </div>
+            <div class="toggle active" id="autoSuggestToggle"></div>
+          </div>
+          <div class="setting-item">
+            <div>
+              <div style="font-weight: 500;">Research Notifications</div>
+              <div style="font-size: 12px; opacity: 0.8;">Get notified about new insights</div>
+            </div>
+            <div class="toggle" id="notificationsToggle"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Help Tab -->
+      <div class="tab-content" id="help-tab">
+        <div class="help-section">
+          <h3 style="margin: 0 0 15px 0; font-size: 16px;">❓ Help & Support</h3>
+          <div class="help-item" id="helpGuide">
+            <span class="emoji">📖</span> User Guide & Tutorial
+          </div>
+          <div class="help-item" id="reportBug">
+            <span class="emoji">🐛</span> Report Bug or Issue
+          </div>
+          <div class="help-item" id="requestFeature">
+            <span class="emoji">💡</span> Request New Feature
+          </div>
+          <div class="help-item" id="betaProgram">
+            <span class="emoji">🧪</span> Join Beta Testing Program
+          </div>
+        </div>
+        
+        <div class="feedback-form" id="feedbackForm" style="display: none;">
+          <h4 id="feedbackTitle">Feedback Form</h4>
+          <div class="form-group">
+            <label>Your Name:</label>
+            <input type="text" id="feedbackName" placeholder="Enter your name">
+          </div>
+          <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="feedbackEmail" placeholder="Enter your email">
+          </div>
+          <div class="form-group">
+            <label>Message:</label>
+            <textarea id="feedbackMessage" placeholder="Describe your feedback, bug report, or feature request..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Type:</label>
+            <select id="feedbackType">
+              <option value="bug">Bug Report</option>
+              <option value="feature">Feature Request</option>
+              <option value="general">General Feedback</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="submitFeedback">Submit Feedback</button>
         </div>
       </div>
     </div>
     
-    <div class="copy-feedback" id="copyFeedback">✓ Copied to clipboard!</div>
+    <div class="notification" id="notification"></div>
     
     <script src="popup.js"></script>
   </body>

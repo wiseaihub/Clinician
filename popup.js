@@ -1,88 +1,290 @@
-// Get DOM elements
-const analyzeButton = document.getElementById('analyzePage');
-const copyButton = document.getElementById('copyButton');
-const outputDiv = document.getElementById('output');
-const copyFeedback = document.getElementById('copyFeedback');
+// Enhanced WISE Clinical Research Assistant - Version 2.0
+// Advanced clinical research tool with local data storage and intelligent website suggestions
 
-// Store analysis data for copying
-let currentAnalysis = null;
-let pageMetadata = null;
-
-// >>>>>>>>>>> CONFIGURATION <<<<<<<<<<<<
+// ==================== CONFIGURATION ====================
 const CONFIG = {
-  API_KEY: 'AIzaSyBTAQqxYxYHoBp1r2brVsAHGMeFmP24gRw', // Replace with your actual API key
+  API_KEY: 'AIzaSyBTAQqxYxYHoBp1r2brVsAHGMeFmP24gRw',
   MODEL_NAME: 'gemini-2.0-flash',
-  API_VERSION: 'v1beta'
+  API_VERSION: 'v1beta',
+  STORAGE_KEY: 'wise_clinical_research',
+  EXPORT_FOLDER: 'WISE Clinician Assistant'
 };
 
-// Function to show copy feedback
-function showCopyFeedback() {
-  copyFeedback.classList.add('show');
+// ==================== GLOBAL VARIABLES ====================
+let currentAnalysis = null;
+let pageMetadata = null;
+let currentTopic = null;
+let researchData = {
+  topics: {},
+  sites: {},
+  analyses: {},
+  settings: {
+    localStorage: false,
+    autoSuggest: true,
+    notifications: false
+  }
+};
+
+// ==================== MEDICAL WEBSITE DATABASE ====================
+const MEDICAL_WEBSITES = {
+  'diabetes': [
+    { name: 'Mayo Clinic - Diabetes', url: 'https://www.mayoclinic.org/diseases-conditions/diabetes', category: 'comprehensive' },
+    { name: 'WebMD - Diabetes Center', url: 'https://www.webmd.com/diabetes/default.htm', category: 'patient' },
+    { name: 'American Diabetes Association', url: 'https://www.diabetes.org/', category: 'professional' },
+    { name: 'PubMed - Diabetes Research', url: 'https://pubmed.ncbi.nlm.nih.gov/?term=diabetes', category: 'research' }
+  ],
+  'hypertension': [
+    { name: 'Mayo Clinic - High Blood Pressure', url: 'https://www.mayoclinic.org/diseases-conditions/high-blood-pressure', category: 'comprehensive' },
+    { name: 'American Heart Association', url: 'https://www.heart.org/en/health-topics/high-blood-pressure', category: 'professional' },
+    { name: 'WebMD - Hypertension', url: 'https://www.webmd.com/hypertension-high-blood-pressure/default.htm', category: 'patient' }
+  ],
+  'covid': [
+    { name: 'WHO - COVID-19', url: 'https://www.who.int/health-topics/coronavirus', category: 'official' },
+    { name: 'CDC - COVID-19', url: 'https://www.cdc.gov/coronavirus/2019-ncov/index.html', category: 'official' },
+    { name: 'PubMed - COVID Research', url: 'https://pubmed.ncbi.nlm.nih.gov/?term=covid-19', category: 'research' }
+  ],
+  'cancer': [
+    { name: 'National Cancer Institute', url: 'https://www.cancer.gov/', category: 'official' },
+    { name: 'Mayo Clinic - Cancer', url: 'https://www.mayoclinic.org/diseases-conditions/cancer', category: 'comprehensive' },
+    { name: 'American Cancer Society', url: 'https://www.cancer.org/', category: 'patient' }
+  ],
+  'default': [
+    { name: 'Mayo Clinic', url: 'https://www.mayoclinic.org/diseases-conditions', category: 'comprehensive' },
+    { name: 'WebMD A-Z', url: 'https://www.webmd.com/a-to-z-guides/common-topics', category: 'patient' },
+    { name: 'MedlinePlus', url: 'https://medlineplus.gov/healthtopics.html', category: 'official' },
+    { name: 'PubMed Central', url: 'https://www.ncbi.nlm.nih.gov/pmc/', category: 'research' },
+    { name: 'WHO Health Topics', url: 'https://www.who.int/health-topics', category: 'official' },
+    { name: 'Apollo Hospitals', url: 'https://www.apollohospitals.com/patient-care/health-and-lifestyle/diseases-and-conditions/', category: 'comprehensive' }
+  ]
+};
+
+// ==================== DOM ELEMENTS ====================
+const elements = {
+  // Tabs
+  tabs: document.querySelectorAll('.tab'),
+  tabContents: document.querySelectorAll('.tab-content'),
+  
+  // Research Tab
+  diseaseSearch: document.getElementById('diseaseSearch'),
+  currentTopic: document.getElementById('currentTopic'),
+  topicName: document.getElementById('topicName'),
+  topicStats: document.getElementById('topicStats'),
+  suggestedSites: document.getElementById('suggestedSites'),
+  sitesList: document.getElementById('sitesList'),
+  analyzePage: document.getElementById('analyzePage'),
+  addToRepo: document.getElementById('addToRepo'),
+  changeTopic: document.getElementById('changeTopic'),
+  exportData: document.getElementById('exportData'),
+  output: document.getElementById('output'),
+  
+  // Repository Tab
+  repoList: document.getElementById('repoList'),
+  
+  // Insights Tab
+  insightsList: document.getElementById('insightsList'),
+  
+  // Settings Tab
+  localStorageToggle: document.getElementById('localStorageToggle'),
+  autoSuggestToggle: document.getElementById('autoSuggestToggle'),
+  notificationsToggle: document.getElementById('notificationsToggle'),
+  
+  // Help Tab
+  helpGuide: document.getElementById('helpGuide'),
+  reportBug: document.getElementById('reportBug'),
+  requestFeature: document.getElementById('requestFeature'),
+  betaProgram: document.getElementById('betaProgram'),
+  feedbackForm: document.getElementById('feedbackForm'),
+  feedbackTitle: document.getElementById('feedbackTitle'),
+  feedbackName: document.getElementById('feedbackName'),
+  feedbackEmail: document.getElementById('feedbackEmail'),
+  feedbackMessage: document.getElementById('feedbackMessage'),
+  feedbackType: document.getElementById('feedbackType'),
+  submitFeedback: document.getElementById('submitFeedback'),
+  
+  // Notification
+  notification: document.getElementById('notification')
+};
+
+// ==================== UTILITY FUNCTIONS ====================
+function showNotification(message, type = 'success') {
+  elements.notification.textContent = message;
+  elements.notification.className = `notification ${type} show`;
   setTimeout(() => {
-    copyFeedback.classList.remove('show');
-  }, 2000);
+    elements.notification.classList.remove('show');
+  }, 3000);
 }
 
-// Function to copy analysis to clipboard
-async function copyToClipboard() {
-  if (!currentAnalysis) return;
+function getCurrentTimestamp() {
+  return new Date().toISOString();
+}
 
-  const textToCopy = `
-WISE Clinical Context Analysis
-Source: ${pageMetadata.url}
-Analysis Date: ${new Date().toLocaleString()}
-${pageMetadata.searchContext ? `Search Context: ${pageMetadata.searchContext}\n` : ''}
+function formatDate(dateString) {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
 
-SUMMARY:
-${currentAnalysis.summary || 'N/A'}
-
-MEDICAL CONDITIONS:
-${currentAnalysis.conditions || 'N/A'}
-
-MEDICATIONS:
-${currentAnalysis.medications || 'N/A'}
-
-DRUG INTERACTIONS:
-${currentAnalysis.interactions || 'N/A'}
-
----
-Generated by WISE Clinical Context Assistant
-  `.trim();
-
+// ==================== STORAGE FUNCTIONS ====================
+async function loadResearchData() {
   try {
-    await navigator.clipboard.writeText(textToCopy);
-    showCopyFeedback();
-  } catch (err) {
-    console.error('Failed to copy:', err);
-    updateOutput(`<div class="error">Failed to copy to clipboard. Please try again.</div>`, true);
+    const result = await chrome.storage.local.get([CONFIG.STORAGE_KEY]);
+    if (result[CONFIG.STORAGE_KEY]) {
+      researchData = { ...researchData, ...result[CONFIG.STORAGE_KEY] };
+    }
+  } catch (error) {
+    console.error('Error loading research data:', error);
   }
 }
 
-// Function to update output
-function updateOutput(content, isError = false, isSuccess = false) {
-  outputDiv.innerHTML = content;
-  outputDiv.classList.remove('error', 'success');
-  if (isError) {
-    outputDiv.classList.add('error');
-  } else if (isSuccess) {
-    outputDiv.classList.add('success');
+async function saveResearchData() {
+  try {
+    await chrome.storage.local.set({ [CONFIG.STORAGE_KEY]: researchData });
+  } catch (error) {
+    console.error('Error saving research data:', error);
   }
 }
 
-// Function to set loading state
-function setLoading(isLoading) {
-  analyzeButton.disabled = isLoading;
-  analyzeButton.textContent = isLoading ? '⏳ Analyzing...' : '🔍 Analyze Page';
-  copyButton.disabled = isLoading || !currentAnalysis;
+async function exportToFile() {
+  try {
+    const exportData = {
+      exportDate: getCurrentTimestamp(),
+      version: '2.0',
+      data: researchData
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const filename = `WISE_Clinical_Research_${new Date().toISOString().split('T')[0]}.json`;
+    
+    await chrome.downloads.download({
+      url: url,
+      filename: `${CONFIG.EXPORT_FOLDER}/${filename}`,
+      saveAs: true
+    });
+    
+    showNotification('Research data exported successfully!', 'success');
+  } catch (error) {
+    console.error('Error exporting data:', error);
+    showNotification('Failed to export data. Please try again.', 'error');
+  }
 }
 
-// Function to extract search context from URL
+// ==================== TOPIC MANAGEMENT ====================
+function setCurrentTopic(topic) {
+  currentTopic = topic.toLowerCase().trim();
+  elements.topicName.textContent = topic;
+  elements.currentTopic.style.display = 'block';
+  updateTopicStats();
+  showSuggestedSites();
+}
+
+function updateTopicStats() {
+  if (!currentTopic) return;
+  
+  const topicData = researchData.topics[currentTopic] || { saved: 0, analyzed: 0 };
+  elements.topicStats.textContent = `${topicData.saved} saved, ${topicData.analyzed} analyzed`;
+}
+
+function showSuggestedSites() {
+  if (!currentTopic) return;
+  
+  // Find relevant websites based on topic
+  let sites = MEDICAL_WEBSITES.default;
+  
+  for (const [keyword, siteList] of Object.entries(MEDICAL_WEBSITES)) {
+    if (currentTopic.includes(keyword) || keyword.includes(currentTopic)) {
+      sites = siteList;
+      break;
+    }
+  }
+  
+  // Add status information
+  const sitesWithStatus = sites.map(site => {
+    const siteKey = site.url;
+    const siteData = researchData.sites[siteKey] || { status: 'unvisited' };
+    return { ...site, status: siteData.status };
+  });
+  
+  elements.sitesList.innerHTML = sitesWithStatus.map(site => `
+    <div class="site-item" data-url="${site.url}">
+      <div>
+        <strong>${site.name}</strong>
+        <div style="font-size: 12px; opacity: 0.8;">${site.category} • ${site.url}</div>
+      </div>
+      <div class="site-status status-${site.status}">
+        ${site.status === 'unvisited' ? 'New' : 
+          site.status === 'visited' ? 'Visited' :
+          site.status === 'analyzed' ? 'Analyzed' : 'Saved'}
+      </div>
+    </div>
+  `).join('');
+  
+  elements.suggestedSites.style.display = 'block';
+  
+  // Add click handlers
+  elements.sitesList.querySelectorAll('.site-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const url = item.dataset.url;
+      chrome.tabs.create({ url: url });
+      updateSiteStatus(url, 'visited');
+    });
+  });
+}
+
+function updateSiteStatus(url, status) {
+  if (!researchData.sites[url]) {
+    researchData.sites[url] = { status: 'unvisited', firstVisited: null, lastAnalyzed: null };
+  }
+  
+  researchData.sites[url].status = status;
+  
+  if (status === 'visited' && !researchData.sites[url].firstVisited) {
+    researchData.sites[url].firstVisited = getCurrentTimestamp();
+  }
+  
+  if (status === 'analyzed') {
+    researchData.sites[url].lastAnalyzed = getCurrentTimestamp();
+  }
+  
+  saveResearchData();
+  showSuggestedSites(); // Refresh the display
+}
+
+// ==================== ANALYSIS FUNCTIONS ====================
+async function getPageMetadata() {
+  try {
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const searchContext = getSearchContext(tab.url);
+    
+    return {
+      url: tab.url,
+      title: tab.title,
+      searchContext: searchContext,
+      timestamp: getCurrentTimestamp(),
+      topic: currentTopic
+    };
+  } catch (error) {
+    console.error('Error getting page metadata:', error);
+    return {
+      url: 'Unknown',
+      title: 'Unknown',
+      searchContext: null,
+      timestamp: getCurrentTimestamp(),
+      topic: currentTopic
+    };
+  }
+}
+
 function getSearchContext(url) {
   try {
     const urlObj = new URL(url);
     const searchParams = new URLSearchParams(urlObj.search);
     
-    // Check common search parameters
     const searchTerms = searchParams.get('q') || 
                        searchParams.get('query') || 
                        searchParams.get('search') ||
@@ -94,154 +296,6 @@ function getSearchContext(url) {
   }
 }
 
-// Function to get page metadata
-async function getPageMetadata() {
-  try {
-    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    const searchContext = getSearchContext(tab.url);
-    
-    return {
-      url: tab.url,
-      title: tab.title,
-      searchContext: searchContext,
-      timestamp: new Date().toLocaleString()
-    };
-  } catch (error) {
-    console.error('Error getting page metadata:', error);
-    return {
-      url: 'Unknown',
-      title: 'Unknown',
-      searchContext: null,
-      timestamp: new Date().toLocaleString()
-    };
-  }
-}
-
-// Function to create metadata display
-function createMetadataDisplay(metadata) {
-  return `
-    <div class="metadata">
-      <div class="metadata-item"><strong>Source:</strong> ${metadata.url}</div>
-      <div class="metadata-item"><strong>Page Title:</strong> ${metadata.title}</div>
-      ${metadata.searchContext ? `<div class="metadata-item"><strong>Context:</strong> ${metadata.searchContext}</div>` : ''}
-      <div class="metadata-item"><strong>Analyzed:</strong> ${metadata.timestamp}</div>
-    </div>
-  `;
-}
-
-// Function to create analysis display with special handling for non-medical content
-function createAnalysisDisplay(analysis) {
-  const hasMedicalContent = analysis.conditions && analysis.conditions !== 'N/A' && !analysis.conditions.toLowerCase().includes('no medical');
-  const isNonMedicalPage = analysis.summary && (
-    analysis.summary.toLowerCase().includes('news') || 
-    analysis.summary.toLowerCase().includes('general') ||
-    analysis.summary.toLowerCase().includes('not a medical')
-  );
-
-  let analysisHtml = `
-    ${createMetadataDisplay(pageMetadata)}
-    <div class="output-section">
-      <div class="section-title"><span class="emoji">📋</span>Summary</div>
-      <div class="section-content">${analysis.summary || 'N/A'}</div>
-    </div>
-    <div class="output-section">
-      <div class="section-title"><span class="emoji">🏥</span>Medical Conditions</div>
-      <div class="section-content">${analysis.conditions || 'N/A'}</div>
-    </div>
-    <div class="output-section">
-      <div class="section-title"><span class="emoji">💊</span>Medications</div>
-      <div class="section-content">${analysis.medications || 'N/A'}</div>
-    </div>
-    <div class="output-section">
-      <div class="section-title"><span class="emoji">⚠️</span>Drug Interactions</div>
-      <div class="section-content">${analysis.interactions || 'N/A'}</div>
-    </div>
-  `;
-
-  // Add suggestion for non-medical pages or pages without medical conditions
-  if (isNonMedicalPage || !hasMedicalContent) {
-    analysisHtml += `
-      <div class="suggestion-note">
-        <strong>💡 Tip:</strong> This page appears to contain limited medical content. 
-        For better clinical insights, try analyzing medical websites like Mayo Clinic, WebMD, or PubMed.
-      </div>
-      ${getWebsiteSuggestions()}
-    `;
-  }
-
-  return analysisHtml;
-}
-
-// Function to handle different types of errors with user-friendly messages
-function getFriendlyErrorMessage(error) {
-  console.error("Raw error:", error);
-  
-  // Handle JSON parsing errors (common when AI doesn't return proper JSON)
-  if (error.message.includes('Unexpected token') || error.message.includes('JSON')) {
-    return {
-      message: "The content on this page may not be suitable for medical analysis. Please try a medical website.",
-      isMedicalContentIssue: true
-    };
-  }
-  
-  // Handle browser pages
-  if (error.message.includes('Cannot analyze browser pages')) {
-    return {
-      message: "Cannot analyze this browser page. Please navigate to a medical/diseases information website.",
-      isMedicalContentIssue: true
-    };
-  }
-  
-  // Handle insufficient text
-  if (error.message.includes('not contain enough text')) {
-    return {
-      message: "This page doesn't contain enough text content for analysis. Please try a different medical website.",
-      isMedicalContentIssue: true
-    };
-  }
-  
-  // Handle API key errors
-  if (error.message.includes('API key') || error.message.includes('401') || error.message.includes('403')) {
-    return {
-      message: "Authentication issue. Please check your API configuration.",
-      isMedicalContentIssue: false
-    };
-  }
-  
-  // Handle other API errors
-  if (error.message.includes('API') || error.message.includes('HTTP')) {
-    return {
-      message: "Temporary service issue. Please try again in a moment.",
-      isMedicalContentIssue: false
-    };
-  }
-  
-  // Default error message
-  return {
-    message: "An unexpected error occurred. Please try again or try a different webpage.",
-    isMedicalContentIssue: false
-  };
-}
-
-// Function to create helpful website suggestions
-function getWebsiteSuggestions() {
-  return `
-    <div class="output-section">
-      <div class="section-title"><span class="emoji">🌐</span>Recommended Medical Websites</div>
-      <div class="section-content">
-        <strong>For Best Results:</strong><br>
-        • <a href="https://www.mayoclinic.org/diseases-conditions" target="_blank">Mayo Clinic</a><br>
-        • <a href="https://www.webmd.com/a-to-z-guides/common-topics" target="_blank">WebMD A-Z</a><br>
-        • <a href="https://medlineplus.gov/healthtopics.html" target="_blank">MedlinePlus</a><br>
-        • <a href="https://www.ncbi.nlm.nih.gov/pmc/" target="_blank">PubMed Central</a><br>
-        • <a href="https://www.who.int/health-topics" target="_blank">WHO Health Topics</a><br>
-        • <a href="https://www.apollohospitals.com/patient-care/health-and-lifestyle/diseases-and-conditions/" target="_blank">Apollo Hospitals</a>
-      </div>
-    </div>
-  `;
-}
-
-// API call function
 async function callGeminiAPI(pageText) {
   const prompt = `
     You are a helpful clinical assistant. Analyze the following webpage text and provide:
@@ -249,6 +303,8 @@ async function callGeminiAPI(pageText) {
     2. Any mentioned medical conditions (list them or say "N/A" if none)
     3. Any mentioned medications (list them or say "N/A" if none)
     4. Any potential drug interactions (list them or say "N/A" if none/no multiple medications)
+    5. Clinical confidence level (High/Medium/Low) for the information presented
+    6. Key clinical insights or recommendations
     
     If the content is clearly non-medical (news, sports, entertainment, etc.), provide a brief summary indicating this is not medical content, and use "N/A" for medical fields.
     
@@ -257,7 +313,9 @@ async function callGeminiAPI(pageText) {
       "summary": "your summary here",
       "conditions": "list or N/A",
       "medications": "list or N/A", 
-      "interactions": "list or N/A"
+      "interactions": "list or N/A",
+      "confidence": "High/Medium/Low",
+      "insights": "key clinical insights or N/A"
     }
     
     Webpage Text: ${pageText.substring(0, 12000)}
@@ -310,7 +368,6 @@ async function callGeminiAPI(pageText) {
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     
-    // Check for JSON parsing errors specifically
     if (error instanceof SyntaxError) {
       throw new Error("Unexpected token - response is not valid JSON");
     }
@@ -319,74 +376,431 @@ async function callGeminiAPI(pageText) {
   }
 }
 
-// Event listeners
-analyzeButton.addEventListener('click', async () => {
-  setLoading(true);
-  copyButton.disabled = true;
+function createAnalysisDisplay(analysis) {
+  const hasMedicalContent = analysis.conditions && analysis.conditions !== 'N/A' && !analysis.conditions.toLowerCase().includes('no medical');
+  
+  let analysisHtml = `
+    <div class="metadata">
+      <div class="metadata-item"><strong>Source:</strong> ${pageMetadata.url}</div>
+      <div class="metadata-item"><strong>Page Title:</strong> ${pageMetadata.title}</div>
+      <div class="metadata-item"><strong>Research Topic:</strong> ${currentTopic || 'General'}</div>
+      ${pageMetadata.searchContext ? `<div class="metadata-item"><strong>Context:</strong> ${pageMetadata.searchContext}</div>` : ''}
+      <div class="metadata-item"><strong>Analyzed:</strong> ${formatDate(pageMetadata.timestamp)}</div>
+      <div class="metadata-item"><strong>Confidence Level:</strong> ${analysis.confidence || 'N/A'}</div>
+    </div>
+    <div class="output-section">
+      <div class="section-title"><span class="emoji">📋</span>Summary</div>
+      <div class="section-content">${analysis.summary || 'N/A'}</div>
+    </div>
+    <div class="output-section">
+      <div class="section-title"><span class="emoji">🏥</span>Medical Conditions</div>
+      <div class="section-content">${analysis.conditions || 'N/A'}</div>
+    </div>
+    <div class="output-section">
+      <div class="section-title"><span class="emoji">💊</span>Medications</div>
+      <div class="section-content">${analysis.medications || 'N/A'}</div>
+    </div>
+    <div class="output-section">
+      <div class="section-title"><span class="emoji">⚠️</span>Drug Interactions</div>
+      <div class="section-content">${analysis.interactions || 'N/A'}</div>
+    </div>
+    <div class="output-section">
+      <div class="section-title"><span class="emoji">💡</span>Clinical Insights</div>
+      <div class="section-content">${analysis.insights || 'N/A'}</div>
+    </div>
+  `;
 
-  try {
-    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    if (tab.url.startsWith('chrome://') || tab.url.startsWith('about:')) {
-      throw new Error('Cannot analyze this browser page. Please navigate to a medical/diseases information website.');
-    }
-
-    // Get page metadata first
-    pageMetadata = await getPageMetadata();
-
-    const injectionResults = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => document.body.innerText
-    });
-
-    const pageText = injectionResults[0].result;
-    
-    if (!pageText || pageText.trim().length < 50) {
-      throw new Error('Page does not contain enough text to analyze. Please try a different medical website.');
-    }
-
-    const analysis = await callGeminiAPI(pageText);
-    currentAnalysis = analysis;
-
-    // Ensure all fields have proper values
-    currentAnalysis.summary = currentAnalysis.summary || 'N/A';
-    currentAnalysis.conditions = currentAnalysis.conditions || 'N/A';
-    currentAnalysis.medications = currentAnalysis.medications || 'N/A';
-    currentAnalysis.interactions = currentAnalysis.interactions || 'N/A';
-
-    updateOutput(createAnalysisDisplay(analysis), false, true);
-    copyButton.disabled = false;
-
-  } catch (error) {
-    console.error("Error in button click handler:", error);
-    
-    const friendlyError = getFriendlyErrorMessage(error);
-    let errorHtml = `
-      <div class="output-section">
-        <div class="section-title"><span class="emoji">❌</span>Analysis Failed</div>
-        <div class="section-content">${friendlyError.message}</div>
+  if (!hasMedicalContent) {
+    analysisHtml += `
+      <div class="suggestion-note">
+        <strong>💡 Tip:</strong> This page appears to contain limited medical content. 
+        For better clinical insights, try analyzing medical websites like Mayo Clinic, WebMD, or PubMed.
       </div>
     `;
+  }
+
+  return analysisHtml;
+}
+
+// ==================== REPOSITORY FUNCTIONS ====================
+async function addToRepository() {
+  if (!currentAnalysis || !pageMetadata) {
+    showNotification('No analysis data to save!', 'error');
+    return;
+  }
+  
+  try {
+    const analysisId = `${pageMetadata.url}_${Date.now()}`;
+    const repositoryItem = {
+      id: analysisId,
+      url: pageMetadata.url,
+      title: pageMetadata.title,
+      topic: currentTopic || 'General',
+      analysis: currentAnalysis,
+      metadata: pageMetadata,
+      savedAt: getCurrentTimestamp()
+    };
     
-    // Add website suggestions for medical content issues
-    if (friendlyError.isMedicalContentIssue) {
-      errorHtml += getWebsiteSuggestions();
+    // Store in research data
+    researchData.analyses[analysisId] = repositoryItem;
+    
+    // Update topic statistics
+    if (currentTopic) {
+      if (!researchData.topics[currentTopic]) {
+        researchData.topics[currentTopic] = { saved: 0, analyzed: 0 };
+      }
+      researchData.topics[currentTopic].saved++;
     }
     
-    updateOutput(errorHtml, true);
-    currentAnalysis = null;
-  } finally {
-    setLoading(false);
+    // Update site status
+    updateSiteStatus(pageMetadata.url, 'saved');
+    
+    // Save to storage
+    await saveResearchData();
+    
+    // Update UI
+    updateRepositoryDisplay();
+    updateTopicStats();
+    
+    showNotification('Analysis saved to research repository!', 'success');
+    elements.addToRepo.disabled = true;
+    
+  } catch (error) {
+    console.error('Error saving to repository:', error);
+    showNotification('Failed to save analysis. Please try again.', 'error');
   }
-});
+}
 
-copyButton.addEventListener('click', copyToClipboard);
+function updateRepositoryDisplay() {
+  const analyses = Object.values(researchData.analyses);
+  
+  if (analyses.length === 0) {
+    elements.repoList.innerHTML = `
+      <div style="text-align: center; opacity: 0.7; padding: 20px;">
+        <span class="emoji">📝</span>No research saved yet. Start analyzing pages to build your repository!
+      </div>
+    `;
+    return;
+  }
+  
+  // Group by topic
+  const groupedByTopic = analyses.reduce((acc, item) => {
+    const topic = item.topic || 'General';
+    if (!acc[topic]) acc[topic] = [];
+    acc[topic].push(item);
+    return acc;
+  }, {});
+  
+  elements.repoList.innerHTML = Object.entries(groupedByTopic).map(([topic, items]) => `
+    <div class="repo-item">
+      <h4>${topic} (${items.length} items)</h4>
+      ${items.slice(0, 3).map(item => `
+        <div style="margin: 8px 0; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 6px;">
+          <div style="font-weight: 500; font-size: 13px;">${item.title}</div>
+          <div style="font-size: 11px; opacity: 0.8;">${formatDate(item.savedAt)}</div>
+          <div style="font-size: 11px; opacity: 0.8;">${item.url}</div>
+        </div>
+      `).join('')}
+      ${items.length > 3 ? `<div style="font-size: 12px; opacity: 0.7; text-align: center;">... and ${items.length - 3} more</div>` : ''}
+    </div>
+  `).join('');
+}
 
-// Initialize with website suggestions
-updateOutput(`
-  <div class="output-section">
-    <div class="section-title"><span class="emoji">👋</span>Ready to Analyze</div>
-    <div class="section-content">Navigate to a medical webpage and click "Analyze Page" to get clinical insights.</div>
-  </div>
-  ${getWebsiteSuggestions()}
-`);
+// ==================== INSIGHTS FUNCTIONS ====================
+function updateInsightsDisplay() {
+  const analyses = Object.values(researchData.analyses);
+  
+  if (analyses.length < 2) {
+    elements.insightsList.innerHTML = `
+      <div style="text-align: center; opacity: 0.7; padding: 20px;">
+        <span class="emoji">🔍</span>Analyze and save at least 2 research items to see insights and comparisons!
+      </div>
+    `;
+    return;
+  }
+  
+  // Generate insights
+  const insights = generateInsights(analyses);
+  
+  elements.insightsList.innerHTML = insights.map(insight => `
+    <div class="insight-item">
+      <div style="font-weight: 500; margin-bottom: 5px;">${insight.title}</div>
+      <div style="font-size: 13px;">${insight.description}</div>
+    </div>
+  `).join('');
+}
+
+function generateInsights(analyses) {
+  const insights = [];
+  
+  // Group by topic
+  const topicGroups = analyses.reduce((acc, item) => {
+    const topic = item.topic || 'General';
+    if (!acc[topic]) acc[topic] = [];
+    acc[topic].push(item);
+    return acc;
+  }, {});
+  
+  // Generate topic-specific insights
+  Object.entries(topicGroups).forEach(([topic, items]) => {
+    if (items.length >= 2) {
+      insights.push({
+        title: `📊 Research Depth: ${topic}`,
+        description: `You have ${items.length} research items for ${topic}. Consider comparing different sources for comprehensive understanding.`
+      });
+      
+      // Check for conflicting information
+      const conditions = items.map(item => item.analysis.conditions).filter(c => c && c !== 'N/A');
+      if (conditions.length >= 2) {
+        insights.push({
+          title: `⚠️ Potential Conflicts: ${topic}`,
+          description: `Multiple sources mention different conditions. Review for conflicting treatment approaches.`
+        });
+      }
+    }
+  });
+  
+  // Overall insights
+  insights.push({
+    title: '🎯 Research Progress',
+    description: `You have analyzed ${analyses.length} pages across ${Object.keys(topicGroups).length} topics. Keep building your clinical knowledge base!`
+  });
+  
+  return insights;
+}
+
+// ==================== EVENT LISTENERS ====================
+function initializeEventListeners() {
+  // Tab switching
+  elements.tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = tab.dataset.tab;
+      
+      // Update active tab
+      elements.tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      // Update active content
+      elements.tabContents.forEach(content => {
+        content.classList.remove('active');
+        if (content.id === `${tabName}-tab`) {
+          content.classList.add('active');
+        }
+      });
+      
+      // Update displays when switching to specific tabs
+      if (tabName === 'repository') {
+        updateRepositoryDisplay();
+      } else if (tabName === 'insights') {
+        updateInsightsDisplay();
+      }
+    });
+  });
+  
+  // Disease search
+  elements.diseaseSearch.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      const searchTerm = elements.diseaseSearch.value.trim();
+      if (searchTerm) {
+        setCurrentTopic(searchTerm);
+        elements.changeTopic.style.display = 'inline-block';
+      }
+    }
+  });
+  
+  // Analyze page
+  elements.analyzePage.addEventListener('click', async () => {
+    elements.analyzePage.disabled = true;
+    elements.analyzePage.textContent = '⏳ Analyzing...';
+    
+    try {
+      let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      
+      if (tab.url.startsWith('chrome://') || tab.url.startsWith('about:')) {
+        throw new Error('Cannot analyze this browser page. Please navigate to a medical/diseases information website.');
+      }
+
+      // Get page metadata
+      pageMetadata = await getPageMetadata();
+
+      // Extract page content
+      const injectionResults = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => document.body.innerText
+      });
+
+      const pageText = injectionResults[0].result;
+      
+      if (!pageText || pageText.trim().length < 50) {
+        throw new Error('Page does not contain enough text to analyze. Please try a different medical website.');
+      }
+
+      // Analyze with AI
+      const analysis = await callGeminiAPI(pageText);
+      currentAnalysis = analysis;
+
+      // Ensure all fields have proper values
+      currentAnalysis.summary = currentAnalysis.summary || 'N/A';
+      currentAnalysis.conditions = currentAnalysis.conditions || 'N/A';
+      currentAnalysis.medications = currentAnalysis.medications || 'N/A';
+      currentAnalysis.interactions = currentAnalysis.interactions || 'N/A';
+      currentAnalysis.confidence = currentAnalysis.confidence || 'N/A';
+      currentAnalysis.insights = currentAnalysis.insights || 'N/A';
+
+      // Update UI
+      elements.output.innerHTML = createAnalysisDisplay(analysis);
+      elements.addToRepo.disabled = false;
+      
+      // Update site status
+      updateSiteStatus(pageMetadata.url, 'analyzed');
+      
+      // Update topic statistics
+      if (currentTopic) {
+        if (!researchData.topics[currentTopic]) {
+          researchData.topics[currentTopic] = { saved: 0, analyzed: 0 };
+        }
+        researchData.topics[currentTopic].analyzed++;
+        updateTopicStats();
+      }
+      
+      showNotification('Page analyzed successfully!', 'success');
+
+    } catch (error) {
+      console.error("Error in analysis:", error);
+      elements.output.innerHTML = `
+        <div class="output-section">
+          <div class="section-title"><span class="emoji">❌</span>Analysis Failed</div>
+          <div class="section-content">${error.message}</div>
+        </div>
+      `;
+      showNotification('Analysis failed. Please try again.', 'error');
+      currentAnalysis = null;
+    } finally {
+      elements.analyzePage.disabled = false;
+      elements.analyzePage.textContent = '🔍 Analyze Current Page';
+    }
+  });
+  
+  // Add to repository
+  elements.addToRepo.addEventListener('click', addToRepository);
+  
+  // Export data
+  elements.exportData.addEventListener('click', exportToFile);
+  
+  // Change topic
+  elements.changeTopic.addEventListener('click', () => {
+    elements.diseaseSearch.value = '';
+    elements.diseaseSearch.focus();
+    elements.changeTopic.style.display = 'none';
+    elements.currentTopic.style.display = 'none';
+    currentTopic = null;
+  });
+  
+  // Settings toggles
+  elements.localStorageToggle.addEventListener('click', () => {
+    elements.localStorageToggle.classList.toggle('active');
+    researchData.settings.localStorage = elements.localStorageToggle.classList.contains('active');
+    saveResearchData();
+  });
+  
+  elements.autoSuggestToggle.addEventListener('click', () => {
+    elements.autoSuggestToggle.classList.toggle('active');
+    researchData.settings.autoSuggest = elements.autoSuggestToggle.classList.contains('active');
+    saveResearchData();
+  });
+  
+  elements.notificationsToggle.addEventListener('click', () => {
+    elements.notificationsToggle.classList.toggle('active');
+    researchData.settings.notifications = elements.notificationsToggle.classList.contains('active');
+    saveResearchData();
+  });
+  
+  // Help section
+  elements.helpGuide.addEventListener('click', () => {
+    showNotification('User guide coming soon!', 'info');
+  });
+  
+  elements.reportBug.addEventListener('click', () => {
+    showFeedbackForm('Bug Report');
+  });
+  
+  elements.requestFeature.addEventListener('click', () => {
+    showFeedbackForm('Feature Request');
+  });
+  
+  elements.betaProgram.addEventListener('click', () => {
+    showFeedbackForm('Beta Program');
+  });
+  
+  elements.submitFeedback.addEventListener('click', submitFeedback);
+}
+
+function showFeedbackForm(type) {
+  elements.feedbackTitle.textContent = type;
+  elements.feedbackType.value = type.toLowerCase().replace(' ', '_');
+  elements.feedbackForm.style.display = 'block';
+}
+
+async function submitFeedback() {
+  const feedback = {
+    name: elements.feedbackName.value,
+    email: elements.feedbackEmail.value,
+    message: elements.feedbackMessage.value,
+    type: elements.feedbackType.value,
+    timestamp: getCurrentTimestamp()
+  };
+  
+  if (!feedback.name || !feedback.message) {
+    showNotification('Please fill in required fields.', 'error');
+    return;
+  }
+  
+  try {
+    // Store feedback locally (in a real app, this would be sent to a server)
+    const feedbackData = await chrome.storage.local.get(['feedback']);
+    const existingFeedback = feedbackData.feedback || [];
+    existingFeedback.push(feedback);
+    await chrome.storage.local.set({ feedback: existingFeedback });
+    
+    showNotification('Feedback submitted successfully!', 'success');
+    elements.feedbackForm.style.display = 'none';
+    
+    // Clear form
+    elements.feedbackName.value = '';
+    elements.feedbackEmail.value = '';
+    elements.feedbackMessage.value = '';
+    
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    showNotification('Failed to submit feedback. Please try again.', 'error');
+  }
+}
+
+// ==================== INITIALIZATION ====================
+async function initialize() {
+  try {
+    // Load existing research data
+    await loadResearchData();
+    
+    // Initialize UI
+    initializeEventListeners();
+    
+    // Load settings
+    elements.localStorageToggle.classList.toggle('active', researchData.settings.localStorage);
+    elements.autoSuggestToggle.classList.toggle('active', researchData.settings.autoSuggest);
+    elements.notificationsToggle.classList.toggle('active', researchData.settings.notifications);
+    
+    // Initialize displays
+    updateRepositoryDisplay();
+    updateInsightsDisplay();
+    
+    console.log('WISE Clinical Research Assistant initialized successfully');
+    
+  } catch (error) {
+    console.error('Error initializing extension:', error);
+    showNotification('Failed to initialize extension. Please reload.', 'error');
+  }
+}
+
+// Start the application
+document.addEventListener('DOMContentLoaded', initialize);
