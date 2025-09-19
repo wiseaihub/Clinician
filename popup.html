@@ -13,7 +13,7 @@
         max-height: 800px;
         padding: 20px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #1e40af 0%, #dc2626 50%, #16a34a 100%);
+        background: linear-gradient(135deg, #0ea5e9 0%, #10b981 50%, #06b6d4 100%);
         color: white;
         margin: 0;
         overflow-y: auto;
@@ -39,7 +39,7 @@
         font-size: 28px;
         font-weight: bold;
         margin-bottom: 8px;
-        background: linear-gradient(45deg, #ffffff, #16a34a, #dc2626);
+        background: linear-gradient(45deg, #ffffff, #10b981, #0ea5e9);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -72,8 +72,8 @@
       
       .tab.active {
         border-bottom-color: #ffffff;
-        background: linear-gradient(135deg, #dc2626 0%, #16a34a 100%);
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
       }
       
       .tab:hover {
@@ -87,37 +87,91 @@
       
       .sub-tabs {
         display: flex;
-        margin-bottom: 15px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        margin-bottom: 20px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px 12px 0 0;
+        padding: 8px 8px 0 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
       
       .sub-tab {
-        padding: 8px 16px;
+        padding: 12px 20px;
         cursor: pointer;
-        border-bottom: 2px solid transparent;
-        transition: all 0.3s ease;
-        font-weight: 500;
-        font-size: 14px;
-        opacity: 0.7;
+        border-bottom: 3px solid transparent;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        font-weight: 600;
+        font-size: 15px;
+        opacity: 0.6;
+        border-radius: 8px 8px 0 0;
+        position: relative;
+        margin-right: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
       }
       
       .sub-tab.active {
-        border-bottom-color: #16a34a;
-        background: rgba(22, 163, 74, 0.1);
+        border-bottom-color: #10b981;
+        background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
         opacity: 1;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        color: white;
       }
       
       .sub-tab:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.15);
+        opacity: 0.9;
+        transform: translateY(-1px);
+        border-bottom-color: rgba(16, 185, 129, 0.5);
+      }
+      
+      .sub-tab::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        border-radius: 8px 8px 0 0;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      
+      .sub-tab:hover::before {
         opacity: 1;
+      }
+      
+      .sub-tab.active::before {
+        opacity: 0;
       }
       
       .sub-tab-content {
         display: none;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 0 0 12px 12px;
+        padding: 20px;
+        margin-top: -2px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        animation: fadeInUp 0.3s ease-out;
       }
       
       .sub-tab-content.active {
         display: block;
+      }
+      
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
       
       .tab-content.active {
@@ -160,8 +214,8 @@
         height: 36px !important;
         border-radius: 50%;
         font-weight: 600;
-        background: linear-gradient(45deg, #dc2626 0%, #16a34a 100%);
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        background: linear-gradient(45deg, #0ea5e9 0%, #10b981 100%);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -188,8 +242,8 @@
       
       .search-btn:hover {
         transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
-        background: linear-gradient(45deg, #b91c1c 0%, #15803d 100%);
+        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.6);
+        background: linear-gradient(45deg, #0284c7 0%, #059669 100%);
       }
       
       .search-btn:active {
@@ -255,15 +309,15 @@
       }
       
       .btn-primary {
-        background: linear-gradient(45deg, #dc2626 0%, #b91c1c 100%);
+        background: linear-gradient(45deg, #0ea5e9 0%, #0284c7 100%);
         color: white;
-        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
       }
       
       .btn-success {
-        background: linear-gradient(45deg, #16a34a 0%, #15803d 100%);
+        background: linear-gradient(45deg, #10b981 0%, #059669 100%);
         color: white;
-        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
       }
       
       .btn-warning {
