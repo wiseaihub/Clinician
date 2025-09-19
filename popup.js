@@ -741,38 +741,38 @@ function initializeEventListeners() {
   elements.analyzePage.addEventListener('click', async () => {
     elements.analyzePage.disabled = true;
     elements.analyzePage.textContent = '⏳ Analyzing...';
+
+  try {
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
-    try {
-      let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      
-      if (tab.url.startsWith('chrome://') || tab.url.startsWith('about:')) {
-        throw new Error('Cannot analyze this browser page. Please navigate to a medical/diseases information website.');
-      }
+    if (tab.url.startsWith('chrome://') || tab.url.startsWith('about:')) {
+      throw new Error('Cannot analyze this browser page. Please navigate to a medical/diseases information website.');
+    }
 
       // Get page metadata
-      pageMetadata = await getPageMetadata();
+    pageMetadata = await getPageMetadata();
 
       // Extract page content
-      const injectionResults = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => document.body.innerText
-      });
+    const injectionResults = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => document.body.innerText
+    });
 
-      const pageText = injectionResults[0].result;
-      
-      if (!pageText || pageText.trim().length < 50) {
-        throw new Error('Page does not contain enough text to analyze. Please try a different medical website.');
-      }
+    const pageText = injectionResults[0].result;
+    
+    if (!pageText || pageText.trim().length < 50) {
+      throw new Error('Page does not contain enough text to analyze. Please try a different medical website.');
+    }
 
       // Analyze with AI
-      const analysis = await callGeminiAPI(pageText);
-      currentAnalysis = analysis;
+    const analysis = await callGeminiAPI(pageText);
+    currentAnalysis = analysis;
 
-      // Ensure all fields have proper values
-      currentAnalysis.summary = currentAnalysis.summary || 'N/A';
-      currentAnalysis.conditions = currentAnalysis.conditions || 'N/A';
-      currentAnalysis.medications = currentAnalysis.medications || 'N/A';
-      currentAnalysis.interactions = currentAnalysis.interactions || 'N/A';
+    // Ensure all fields have proper values
+    currentAnalysis.summary = currentAnalysis.summary || 'N/A';
+    currentAnalysis.conditions = currentAnalysis.conditions || 'N/A';
+    currentAnalysis.medications = currentAnalysis.medications || 'N/A';
+    currentAnalysis.interactions = currentAnalysis.interactions || 'N/A';
       currentAnalysis.confidence = currentAnalysis.confidence || 'N/A';
       currentAnalysis.insights = currentAnalysis.insights || 'N/A';
 
@@ -794,17 +794,17 @@ function initializeEventListeners() {
       
       showNotification('Page analyzed successfully!', 'success');
 
-    } catch (error) {
+  } catch (error) {
       console.error("Error in analysis:", error);
       elements.output.innerHTML = `
-        <div class="output-section">
-          <div class="section-title"><span class="emoji">❌</span>Analysis Failed</div>
+      <div class="output-section">
+        <div class="section-title"><span class="emoji">❌</span>Analysis Failed</div>
           <div class="section-content">${error.message}</div>
-        </div>
-      `;
+      </div>
+    `;
       showNotification('Analysis failed. Please try again.', 'error');
-      currentAnalysis = null;
-    } finally {
+    currentAnalysis = null;
+  } finally {
       elements.analyzePage.disabled = false;
       elements.analyzePage.textContent = '🔍 Analyze Current Page';
     }
