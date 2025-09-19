@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WISE Clinical Assistant",
-  "version": "2.8",
+  "version": "2.9",
   "description": "Clinical research tool",
   "permissions": [
     "activeTab",

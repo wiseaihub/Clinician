@@ -951,10 +951,23 @@ Sent from WISE Clinical Assistant Chrome Extension
     // Create mailto link
     const mailtoLink = `mailto:wiseaihub@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     
-    // Open email client
-    window.open(mailtoLink, '_blank');
+    // Try to copy email content to clipboard as alternative
+    const emailContent = `To: wiseaihub@gmail.com\nSubject: ${subject}\n\n${body}`;
     
-    showNotification('Email client opened with your feedback!', 'success');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(emailContent).then(() => {
+        showNotification('Email content copied to clipboard! You can paste it into your email client.', 'success');
+      }).catch(() => {
+        // Fallback to mailto
+        window.open(mailtoLink, '_blank');
+        showNotification('Email client opened with your feedback!', 'success');
+      });
+    } else {
+      // Fallback to mailto
+      window.open(mailtoLink, '_blank');
+      showNotification('Email client opened with your feedback!', 'success');
+    }
+    
     elements.feedbackForm.style.display = 'none';
     
     // Clear form
@@ -1016,19 +1029,30 @@ function setupSubTabs() {
 
 // Switch to specific sub-tab
 function switchToSubTab(subtabType) {
+  console.log('Switching to sub-tab:', subtabType);
   const subTabs = document.querySelectorAll('.sub-tab');
   
   // Update active sub-tab
   subTabs.forEach(t => t.classList.remove('active'));
   const activeTab = document.querySelector(`[data-subtab="${subtabType}"]`);
-  if (activeTab) activeTab.classList.add('active');
+  if (activeTab) {
+    activeTab.classList.add('active');
+    console.log('Activated tab:', activeTab);
+  } else {
+    console.error('Tab not found:', subtabType);
+  }
   
   // Show/hide content
   document.querySelectorAll('.sub-tab-content').forEach(content => {
     content.classList.remove('active');
   });
   const targetContent = document.getElementById(`${subtabType}Content`);
-  if (targetContent) targetContent.classList.add('active');
+  if (targetContent) {
+    targetContent.classList.add('active');
+    console.log('Activated content:', targetContent);
+  } else {
+    console.error('Content not found:', `${subtabType}Content`);
+  }
 }
 
 // Storage path update functionality
@@ -1093,21 +1117,24 @@ function getDynamicSuggestions(searchTerm) {
     suggestions.push(...scoredSources.slice(0, 6));
   }
   
-  // Always add some high-quality default sources
-  const defaultSources = [
-    ...MEDICAL_WEBSITES.academic.slice(0, 2),
-    ...MEDICAL_WEBSITES.journals.slice(0, 2),
-    ...MEDICAL_WEBSITES.clinical.slice(0, 2)
-  ];
+  // Always add some high-quality default sources if we have few matches
+  if (suggestions.length < 5) {
+    const defaultSources = [
+      ...MEDICAL_WEBSITES.academic.slice(0, 3),
+      ...MEDICAL_WEBSITES.journals.slice(0, 2),
+      ...MEDICAL_WEBSITES.clinical.slice(0, 3),
+      ...MEDICAL_WEBSITES.specialized.slice(0, 2)
+    ];
+    
+    // Add defaults that aren't already in suggestions
+    defaultSources.forEach(source => {
+      if (!suggestions.find(s => s.url === source.url)) {
+        suggestions.push({ ...source, category: 'recommended', score: 1 });
+      }
+    });
+  }
   
-  // Add defaults that aren't already in suggestions
-  defaultSources.forEach(source => {
-    if (!suggestions.find(s => s.url === source.url)) {
-      suggestions.push({ ...source, category: 'recommended', score: 1 });
-    }
-  });
-  
-  return suggestions.slice(0, 10); // Show up to 10 suggestions
+  return suggestions.slice(0, 12); // Show up to 12 suggestions
 }
 
 // Enhanced search functionality
@@ -1199,14 +1226,9 @@ function visitSiteAndActivateActions(url, siteName) {
 
 // Show default suggestions on load
 function showDefaultSuggestions() {
-  const defaultSuggestions = [
-    ...MEDICAL_WEBSITES.academic.slice(0, 3),
-    ...MEDICAL_WEBSITES.journals.slice(0, 2),
-    ...MEDICAL_WEBSITES.clinical.slice(0, 3)
-  ];
-  
-  updateSitesList(defaultSuggestions);
-  elements.suggestedSites.style.display = 'block';
+  // Don't show suggestions by default - wait for user search
+  // This ensures dynamic suggestions work properly
+  elements.suggestedSites.style.display = 'none';
 }
 
 // Start the application
