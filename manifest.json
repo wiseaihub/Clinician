@@ -12,13 +12,15 @@
     ],
     "action": {
       "default_popup": "popup.html", // This file opens when you click the extension icon
-      "default_icon": {              // You can add icons later
+      "default_icon": {              // WISE branded icons
         "16": "images/icon16.png",
+        "32": "images/icon32.png",
         "48": "images/icon48.png"
       }
     },
-    "icons": {                       // You can add icons later
+    "icons": {                       // WISE branded icons
       "16": "images/icon16.png",
+      "32": "images/icon32.png",
       "48": "images/icon48.png"
     }
   }

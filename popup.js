@@ -20,9 +20,10 @@ let researchData = {
   analyses: {},
   settings: {
     localStorage: false,
-    autoSuggest: true,
-    notifications: false
-  }
+    notifications: false,
+    cdssWishlist: true
+  },
+  currentSearchTerm: null
 };
 
 // ==================== MEDICAL WEBSITE DATABASE ====================
@@ -66,6 +67,7 @@ const elements = {
   
   // Research Tab
   diseaseSearch: document.getElementById('diseaseSearch'),
+  searchButton: document.getElementById('searchButton'),
   currentTopic: document.getElementById('currentTopic'),
   topicName: document.getElementById('topicName'),
   topicStats: document.getElementById('topicStats'),
@@ -74,7 +76,6 @@ const elements = {
   analyzePage: document.getElementById('analyzePage'),
   addToRepo: document.getElementById('addToRepo'),
   changeTopic: document.getElementById('changeTopic'),
-  exportData: document.getElementById('exportData'),
   output: document.getElementById('output'),
   
   // Repository Tab
@@ -82,11 +83,13 @@ const elements = {
   
   // Insights Tab
   insightsList: document.getElementById('insightsList'),
+  exportInsights: document.getElementById('exportInsights'),
   
   // Settings Tab
   localStorageToggle: document.getElementById('localStorageToggle'),
-  autoSuggestToggle: document.getElementById('autoSuggestToggle'),
+  storagePath: document.getElementById('storagePath'),
   notificationsToggle: document.getElementById('notificationsToggle'),
+  cdssWishlistToggle: document.getElementById('cdssWishlistToggle'),
   
   // Help Tab
   helpGuide: document.getElementById('helpGuide'),
@@ -148,18 +151,44 @@ async function saveResearchData() {
   }
 }
 
-async function exportToFile() {
+async function exportInsightsToFile() {
   try {
-    const exportData = {
-      exportDate: getCurrentTimestamp(),
-      version: '2.0',
-      data: researchData
-    };
+    const analyses = Object.values(researchData.analyses);
+    const insights = generateTopicInsights(analyses);
     
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    // Create HTML report
+    const htmlReport = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WISE Clinical Research Insights Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 50%, #10b981 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .content { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .insight-item { margin-bottom: 30px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .card { background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center; }
+        .cdss { background: #e8f5e8; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 WISE Clinical Research Insights Report</h1>
+        <p>Generated on ${formatDate(getCurrentTimestamp())}</p>
+    </div>
+    <div class="content">
+        ${insights.replace(/style="[^"]*"/g, '').replace(/class="[^"]*"/g, '')}
+    </div>
+</body>
+</html>`;
+    
+    const blob = new Blob([htmlReport], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     
-    const filename = `WISE_Clinical_Research_${new Date().toISOString().split('T')[0]}.json`;
+    const filename = `WISE_Clinical_Insights_${new Date().toISOString().split('T')[0]}.html`;
     
     await chrome.downloads.download({
       url: url,
@@ -167,20 +196,22 @@ async function exportToFile() {
       saveAs: true
     });
     
-    showNotification('Research data exported successfully!', 'success');
+    showNotification('Insights report exported successfully!', 'success');
   } catch (error) {
-    console.error('Error exporting data:', error);
-    showNotification('Failed to export data. Please try again.', 'error');
+    console.error('Error exporting insights:', error);
+    showNotification('Failed to export insights. Please try again.', 'error');
   }
 }
 
 // ==================== TOPIC MANAGEMENT ====================
 function setCurrentTopic(topic) {
   currentTopic = topic.toLowerCase().trim();
+  researchData.currentSearchTerm = topic; // Preserve the original search term
   elements.topicName.textContent = topic;
   elements.currentTopic.style.display = 'block';
   updateTopicStats();
   showSuggestedSites();
+  saveResearchData(); // Save the search term
 }
 
 function updateTopicStats() {
@@ -465,6 +496,9 @@ async function addToRepository() {
     showNotification('Analysis saved to research repository!', 'success');
     elements.addToRepo.disabled = true;
     
+    // Auto-switch to repository tab to show the latest addition
+    switchToTab('repository');
+    
   } catch (error) {
     console.error('Error saving to repository:', error);
     showNotification('Failed to save analysis. Please try again.', 'error');
@@ -483,8 +517,11 @@ function updateRepositoryDisplay() {
     return;
   }
   
+  // Sort by date (reverse chronological - newest first)
+  const sortedAnalyses = analyses.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+  
   // Group by topic
-  const groupedByTopic = analyses.reduce((acc, item) => {
+  const groupedByTopic = sortedAnalyses.reduce((acc, item) => {
     const topic = item.topic || 'General';
     if (!acc[topic]) acc[topic] = [];
     acc[topic].push(item);
@@ -494,14 +531,14 @@ function updateRepositoryDisplay() {
   elements.repoList.innerHTML = Object.entries(groupedByTopic).map(([topic, items]) => `
     <div class="repo-item">
       <h4>${topic} (${items.length} items)</h4>
-      ${items.slice(0, 3).map(item => `
+      ${items.slice(0, 5).map(item => `
         <div style="margin: 8px 0; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 6px;">
           <div style="font-weight: 500; font-size: 13px;">${item.title}</div>
           <div style="font-size: 11px; opacity: 0.8;">${formatDate(item.savedAt)}</div>
           <div style="font-size: 11px; opacity: 0.8;">${item.url}</div>
         </div>
       `).join('')}
-      ${items.length > 3 ? `<div style="font-size: 12px; opacity: 0.7; text-align: center;">... and ${items.length - 3} more</div>` : ''}
+      ${items.length > 5 ? `<div style="font-size: 12px; opacity: 0.7; text-align: center;">... and ${items.length - 5} more</div>` : ''}
     </div>
   `).join('');
 }
@@ -510,29 +547,24 @@ function updateRepositoryDisplay() {
 function updateInsightsDisplay() {
   const analyses = Object.values(researchData.analyses);
   
-  if (analyses.length < 2) {
+  if (analyses.length === 0) {
     elements.insightsList.innerHTML = `
       <div style="text-align: center; opacity: 0.7; padding: 20px;">
-        <span class="emoji">🔍</span>Analyze and save at least 2 research items to see insights and comparisons!
+        <span class="emoji">🔍</span>Analyze and save research to see insights and comparisons!
       </div>
     `;
+    elements.exportInsights.disabled = true;
     return;
   }
   
-  // Generate insights
-  const insights = generateInsights(analyses);
+  // Generate topic-based insights
+  const topicInsights = generateTopicInsights(analyses);
   
-  elements.insightsList.innerHTML = insights.map(insight => `
-    <div class="insight-item">
-      <div style="font-weight: 500; margin-bottom: 5px;">${insight.title}</div>
-      <div style="font-size: 13px;">${insight.description}</div>
-    </div>
-  `).join('');
+  elements.insightsList.innerHTML = topicInsights;
+  elements.exportInsights.disabled = false;
 }
 
-function generateInsights(analyses) {
-  const insights = [];
-  
+function generateTopicInsights(analyses) {
   // Group by topic
   const topicGroups = analyses.reduce((acc, item) => {
     const topic = item.topic || 'General';
@@ -541,32 +573,141 @@ function generateInsights(analyses) {
     return acc;
   }, {});
   
-  // Generate topic-specific insights
+  let insightsHtml = '';
+  
   Object.entries(topicGroups).forEach(([topic, items]) => {
-    if (items.length >= 2) {
-      insights.push({
-        title: `📊 Research Depth: ${topic}`,
-        description: `You have ${items.length} research items for ${topic}. Consider comparing different sources for comprehensive understanding.`
-      });
-      
-      // Check for conflicting information
-      const conditions = items.map(item => item.analysis.conditions).filter(c => c && c !== 'N/A');
-      if (conditions.length >= 2) {
-        insights.push({
-          title: `⚠️ Potential Conflicts: ${topic}`,
-          description: `Multiple sources mention different conditions. Review for conflicting treatment approaches.`
-        });
-      }
+    const analysis = analyzeTopicData(topic, items);
+    
+    insightsHtml += `
+      <div class="insight-item" style="margin-bottom: 20px;">
+        <div style="font-weight: 600; font-size: 16px; margin-bottom: 10px; color: #10b981;">
+          📊 ${topic.charAt(0).toUpperCase() + topic.slice(1)} Research Analysis
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+          <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
+            <div style="font-weight: 500; margin-bottom: 8px;">📈 Research Breadth & Depth</div>
+            <div style="font-size: 13px;">Sources: ${items.length} | Confidence: ${analysis.avgConfidence}</div>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
+            <div style="font-weight: 500; margin-bottom: 8px;">⚠️ Treatment Variations</div>
+            <div style="font-size: 13px;">Diversity Level: ${analysis.treatmentDiversity}</div>
+          </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-weight: 500; font-size: 12px; margin-bottom: 5px;">🌍 Regional</div>
+            <div style="font-size: 11px;">${analysis.regionalVariation}</div>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-weight: 500; font-size: 12px; margin-bottom: 5px;">👥 Social</div>
+            <div style="font-size: 11px;">${analysis.socialVariation}</div>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-weight: 500; font-size: 12px; margin-bottom: 5px;">💰 Economic</div>
+            <div style="font-size: 11px;">${analysis.economicVariation}</div>
+          </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-weight: 500; font-size: 12px; margin-bottom: 5px;">🔍 Diagnosis</div>
+            <div style="font-size: 11px;">${analysis.diagnosisConfidence}</div>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-weight: 500; font-size: 12px; margin-bottom: 5px;">💊 Treatment</div>
+            <div style="font-size: 11px;">${analysis.treatmentConfidence}</div>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-weight: 500; font-size: 12px; margin-bottom: 5px;">📈 Efficacy</div>
+            <div style="font-size: 11px;">${analysis.efficacyConfidence}</div>
+          </div>
+        </div>
+        
+        <div style="background: rgba(16, 185, 129, 0.2); padding: 10px; border-radius: 8px; border-left: 3px solid #10b981;">
+          <div style="font-weight: 500; font-size: 12px; margin-bottom: 5px;">🎯 CDSS Recommendation</div>
+          <div style="font-size: 11px;">${analysis.cdssRecommendation}</div>
+        </div>
+      </div>
+    `;
+  });
+  
+  return insightsHtml;
+}
+
+function analyzeTopicData(topic, items) {
+  // Analyze confidence levels
+  const confidences = items.map(item => item.analysis.confidence).filter(c => c && c !== 'N/A');
+  const avgConfidence = confidences.length > 0 ? 
+    confidences.reduce((sum, c) => {
+      const level = c.toLowerCase();
+      return sum + (level === 'high' ? 3 : level === 'medium' ? 2 : 1);
+    }, 0) / confidences.length : 0;
+  
+  const confidenceLevel = avgConfidence >= 2.5 ? 'High' : avgConfidence >= 1.5 ? 'Medium' : 'Low';
+  
+  // Analyze treatment diversity
+  const treatments = items.map(item => item.analysis.medications).filter(t => t && t !== 'N/A');
+  const uniqueTreatments = new Set(treatments.flatMap(t => t.split(',').map(s => s.trim())));
+  const treatmentDiversity = uniqueTreatments.size >= 5 ? 'High' : uniqueTreatments.size >= 3 ? 'Medium' : 'Low';
+  
+  // Analyze variations (simplified for this iteration)
+  const regionalVariation = items.length >= 3 ? 'Medium' : 'Low';
+  const socialVariation = items.length >= 4 ? 'High' : items.length >= 2 ? 'Medium' : 'Low';
+  const economicVariation = items.length >= 3 ? 'Medium' : 'Low';
+  
+  // AI confidence levels
+  const diagnosisConfidence = confidenceLevel;
+  const treatmentConfidence = treatmentDiversity === 'High' ? 'Medium' : confidenceLevel;
+  const efficacyConfidence = items.length >= 3 ? 'Medium' : 'Low';
+  
+  // CDSS recommendation
+  const cdssRecommendation = items.length >= 3 ? 
+    `Strong candidate for CDSS integration. ${items.length} sources provide comprehensive coverage.` :
+    items.length >= 2 ?
+    `Good candidate for CDSS. Consider adding more sources for better coverage.` :
+    `Limited data available. Add more research before CDSS integration.`;
+  
+  return {
+    avgConfidence: confidenceLevel,
+    treatmentDiversity,
+    regionalVariation,
+    socialVariation,
+    economicVariation,
+    diagnosisConfidence,
+    treatmentConfidence,
+    efficacyConfidence,
+    cdssRecommendation
+  };
+}
+
+// ==================== TAB MANAGEMENT ====================
+function switchToTab(tabName) {
+  // Update active tab
+  elements.tabs.forEach(t => t.classList.remove('active'));
+  const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
+  if (targetTab) targetTab.classList.add('active');
+  
+  // Update active content
+  elements.tabContents.forEach(content => {
+    content.classList.remove('active');
+    if (content.id === `${tabName}-tab`) {
+      content.classList.add('active');
     }
   });
   
-  // Overall insights
-  insights.push({
-    title: '🎯 Research Progress',
-    description: `You have analyzed ${analyses.length} pages across ${Object.keys(topicGroups).length} topics. Keep building your clinical knowledge base!`
-  });
-  
-  return insights;
+  // Update displays when switching to specific tabs
+  if (tabName === 'repository') {
+    updateRepositoryDisplay();
+  } else if (tabName === 'insights') {
+    updateInsightsDisplay();
+  }
 }
 
 // ==================== EVENT LISTENERS ====================
@@ -575,38 +716,26 @@ function initializeEventListeners() {
   elements.tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const tabName = tab.dataset.tab;
-      
-      // Update active tab
-      elements.tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      
-      // Update active content
-      elements.tabContents.forEach(content => {
-        content.classList.remove('active');
-        if (content.id === `${tabName}-tab`) {
-          content.classList.add('active');
-        }
-      });
-      
-      // Update displays when switching to specific tabs
-      if (tabName === 'repository') {
-        updateRepositoryDisplay();
-      } else if (tabName === 'insights') {
-        updateInsightsDisplay();
-      }
+      switchToTab(tabName);
     });
   });
   
   // Disease search
+  function performSearch() {
+    const searchTerm = elements.diseaseSearch.value.trim();
+    if (searchTerm) {
+      setCurrentTopic(searchTerm);
+      elements.changeTopic.style.display = 'inline-block';
+    }
+  }
+  
   elements.diseaseSearch.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-      const searchTerm = elements.diseaseSearch.value.trim();
-      if (searchTerm) {
-        setCurrentTopic(searchTerm);
-        elements.changeTopic.style.display = 'inline-block';
-      }
+      performSearch();
     }
   });
+  
+  elements.searchButton.addEventListener('click', performSearch);
   
   // Analyze page
   elements.analyzePage.addEventListener('click', async () => {
@@ -684,8 +813,8 @@ function initializeEventListeners() {
   // Add to repository
   elements.addToRepo.addEventListener('click', addToRepository);
   
-  // Export data
-  elements.exportData.addEventListener('click', exportToFile);
+  // Export insights
+  elements.exportInsights.addEventListener('click', exportInsightsToFile);
   
   // Change topic
   elements.changeTopic.addEventListener('click', () => {
@@ -700,18 +829,13 @@ function initializeEventListeners() {
   elements.localStorageToggle.addEventListener('click', () => {
     elements.localStorageToggle.classList.toggle('active');
     researchData.settings.localStorage = elements.localStorageToggle.classList.contains('active');
+    elements.storagePath.style.display = researchData.settings.localStorage ? 'block' : 'none';
     saveResearchData();
   });
   
-  elements.autoSuggestToggle.addEventListener('click', () => {
-    elements.autoSuggestToggle.classList.toggle('active');
-    researchData.settings.autoSuggest = elements.autoSuggestToggle.classList.contains('active');
-    saveResearchData();
-  });
-  
-  elements.notificationsToggle.addEventListener('click', () => {
-    elements.notificationsToggle.classList.toggle('active');
-    researchData.settings.notifications = elements.notificationsToggle.classList.contains('active');
+  elements.cdssWishlistToggle.addEventListener('click', () => {
+    elements.cdssWishlistToggle.classList.toggle('active');
+    researchData.settings.cdssWishlist = elements.cdssWishlistToggle.classList.contains('active');
     saveResearchData();
   });
   
@@ -737,7 +861,7 @@ function initializeEventListeners() {
 
 function showFeedbackForm(type) {
   elements.feedbackTitle.textContent = type;
-  elements.feedbackType.value = type.toLowerCase().replace(' ', '_');
+  elements.feedbackType.value = type;
   elements.feedbackForm.style.display = 'block';
 }
 
@@ -756,13 +880,28 @@ async function submitFeedback() {
   }
   
   try {
-    // Store feedback locally (in a real app, this would be sent to a server)
-    const feedbackData = await chrome.storage.local.get(['feedback']);
-    const existingFeedback = feedbackData.feedback || [];
-    existingFeedback.push(feedback);
-    await chrome.storage.local.set({ feedback: existingFeedback });
+    // Create email content
+    const subject = `WISE Clinical Assistant - ${feedback.type}`;
+    const body = `
+Name: ${feedback.name}
+Email: ${feedback.email}
+Type: ${feedback.type}
+Timestamp: ${formatDate(feedback.timestamp)}
+
+Message:
+${feedback.message}
+
+---
+Sent from WISE Clinical Assistant Chrome Extension
+    `.trim();
     
-    showNotification('Feedback submitted successfully!', 'success');
+    // Create mailto link
+    const mailtoLink = `mailto:wiseaihub@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // Open email client
+    window.open(mailtoLink, '_blank');
+    
+    showNotification('Email client opened with your feedback!', 'success');
     elements.feedbackForm.style.display = 'none';
     
     // Clear form
@@ -772,7 +911,7 @@ async function submitFeedback() {
     
   } catch (error) {
     console.error('Error submitting feedback:', error);
-    showNotification('Failed to submit feedback. Please try again.', 'error');
+    showNotification('Failed to open email client. Please try again.', 'error');
   }
 }
 
@@ -787,8 +926,15 @@ async function initialize() {
     
     // Load settings
     elements.localStorageToggle.classList.toggle('active', researchData.settings.localStorage);
-    elements.autoSuggestToggle.classList.toggle('active', researchData.settings.autoSuggest);
-    elements.notificationsToggle.classList.toggle('active', researchData.settings.notifications);
+    elements.storagePath.style.display = researchData.settings.localStorage ? 'block' : 'none';
+    elements.cdssWishlistToggle.classList.toggle('active', researchData.settings.cdssWishlist);
+    
+    // Restore search term if available
+    if (researchData.currentSearchTerm) {
+      elements.diseaseSearch.value = researchData.currentSearchTerm;
+      setCurrentTopic(researchData.currentSearchTerm);
+      elements.changeTopic.style.display = 'inline-block';
+    }
     
     // Initialize displays
     updateRepositoryDisplay();

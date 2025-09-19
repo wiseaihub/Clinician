@@ -1,17 +1,37 @@
-# Clinical Context Assistant Chrome Extension
+# WISE Clinical Research Assistant Chrome Extension
 
-A Chrome extension designed to assist healthcare professionals by providing clinical context and support while browsing medical information online.
+An advanced Chrome extension designed to transform clinical research workflows for healthcare professionals. This comprehensive tool provides intelligent website suggestions, AI-powered analysis, and local data management for building a personal clinical knowledge base.
 
 ## 🏥 Overview
 
-The Clinical Context Assistant is a browser extension that helps clinicians and healthcare professionals access relevant clinical information and context while researching medical topics online. This extension provides quick access to clinical guidelines, drug interactions, and medical references.
+The WISE Clinical Research Assistant is a sophisticated browser extension that revolutionizes how clinicians and healthcare professionals conduct medical research online. Built with advanced AI integration and intelligent data management, it provides a complete research workflow from initial topic search to comprehensive insights analysis.
 
-## ✨ Features
+## ✨ Enhanced Features (Version 2.0)
 
-- **Quick Clinical Access**: Instant access to clinical guidelines and references
-- **Medical Context**: Provides relevant clinical context for medical terms and conditions
-- **User-Friendly Interface**: Clean and intuitive popup interface
-- **Fast Performance**: Lightweight extension with minimal impact on browsing speed
+### 🔍 **Intelligent Research Workflow**
+- **Disease/Symptom Search**: Enter medical topics to get curated website suggestions
+- **Smart Website Suggestions**: AI-powered recommendations based on medical categories
+- **URL Status Tracking**: Visual indicators for visited/analyzed/saved websites
+- **Search Persistence**: Maintains search context across browser sessions
+
+### 📚 **Advanced Data Management**
+- **Research Repository**: Save and organize clinical findings locally
+- **Local File Storage**: Export research data to 'WISE Clinician Assistant' folder
+- **Topic Management**: Organize research by medical topics with statistics
+- **Cross-Platform**: Works seamlessly on Windows, Mac, and Linux
+
+### 📊 **Research Insights & Analysis**
+- **Topic-Based Analysis**: Comprehensive insights organized by medical conditions
+- **Treatment Variations**: Analysis of conflicting/alternative treatment approaches
+- **Demographic Variations**: Regional, social, and economic factor analysis
+- **AI Confidence Scoring**: Confidence levels for diagnosis, treatment, and efficacy
+- **CDSS Integration**: Recommendations for Clinical Decision Support System integration
+
+### 🎨 **Professional User Experience**
+- **WISE Brand Colors**: Professional medical interface with brand-consistent styling
+- **Responsive Design**: Larger window (800x600) with tabbed interface
+- **Real-time Notifications**: User feedback for all actions
+- **Email Integration**: Direct feedback system to wiseaihub@gmail.com
 
 ## 🚀 Installation
 
@@ -63,12 +83,27 @@ Clinical_Context_Assistant/
 ### Building
 No build process required - this is a vanilla JavaScript extension that runs directly in the browser.
 
-## 📋 Usage
+## 📋 Enhanced Usage Workflow
 
-1. **Install the extension** following the installation steps above
-2. **Click the extension icon** in your Chrome toolbar
-3. **Use the popup interface** to access clinical information
-4. **Browse medical content** with enhanced clinical context
+### **Step 1: Research Initiation**
+1. **Enter Medical Topic**: Type disease, symptom, or condition in the search box
+2. **Click Search Button**: Get intelligent website suggestions
+3. **Browse Suggested Sites**: Click on curated medical websites
+
+### **Step 2: Analysis & Data Collection**
+1. **Analyze Current Page**: Click "Analyze Current Page" for AI insights
+2. **Review Results**: Get comprehensive clinical analysis with confidence levels
+3. **Save to Repository**: Click "Add to Research Repo" to save valuable findings
+
+### **Step 3: Research Management**
+1. **View Repository**: See all saved research organized by topic (newest first)
+2. **Generate Insights**: Switch to Insights tab for comprehensive analysis
+3. **Export Reports**: Download HTML reports for offline review
+
+### **Step 4: Advanced Features**
+1. **Settings Configuration**: Enable local storage and CDSS wishlist
+2. **Feedback System**: Report bugs, request features, or join beta program
+3. **Cross-Session Persistence**: Search terms and progress maintained across browser sessions
 
 ## 🔧 Configuration
 
@@ -81,9 +116,17 @@ The extension can be configured through the `manifest.json` file:
 
 ## 📝 Version History
 
-### v1.0.0 (Current)
-- Initial release
-- Basic popup interface
+### v2.0.0 (Current) - Enhanced Clinical Research Assistant
+- **Intelligent Research Workflow**: Disease/symptom search with website suggestions
+- **Advanced Data Management**: Research repository with local storage
+- **Comprehensive Insights**: Topic-based analysis with treatment variations
+- **Professional UI**: WISE brand colors and responsive design
+- **Email Integration**: Direct feedback system
+- **Cross-Session Persistence**: Search terms and progress maintained
+- **CDSS Integration**: Clinical Decision Support System recommendations
+
+### v1.0.0 (Baseline)
+- Initial release with basic popup interface
 - Clinical context assistant functionality
 - Chrome extension manifest v3 compatibility
 

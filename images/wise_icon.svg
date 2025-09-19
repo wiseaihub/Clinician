@@ -1,0 +1,19 @@
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="24" cy="24" r="22" fill="url(#bgGradient)" stroke="#ffffff" stroke-width="2"/>
+  
+  <!-- W letter -->
+  <text x="24" y="32" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#ffffff">W</text>
+  
+  <!-- Medical cross accent -->
+  <rect x="20" y="8" width="2" height="8" fill="#ffffff" opacity="0.8"/>
+  <rect x="17" y="10" width="8" height="2" fill="#ffffff" opacity="0.8"/>
+</svg>
