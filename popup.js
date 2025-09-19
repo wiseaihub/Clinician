@@ -1009,18 +1009,26 @@ function setupSubTabs() {
   subTabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const subtabType = tab.dataset.subtab;
-      
-      // Update active sub-tab
-      subTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      
-      // Show/hide content
-      document.querySelectorAll('.sub-tab-content').forEach(content => {
-        content.classList.remove('active');
-      });
-      document.getElementById(`${subtabType}Content`).classList.add('active');
+      switchToSubTab(subtabType);
     });
   });
+}
+
+// Switch to specific sub-tab
+function switchToSubTab(subtabType) {
+  const subTabs = document.querySelectorAll('.sub-tab');
+  
+  // Update active sub-tab
+  subTabs.forEach(t => t.classList.remove('active'));
+  const activeTab = document.querySelector(`[data-subtab="${subtabType}"]`);
+  if (activeTab) activeTab.classList.add('active');
+  
+  // Show/hide content
+  document.querySelectorAll('.sub-tab-content').forEach(content => {
+    content.classList.remove('active');
+  });
+  const targetContent = document.getElementById(`${subtabType}Content`);
+  if (targetContent) targetContent.classList.add('active');
 }
 
 // Storage path update functionality
@@ -1045,30 +1053,61 @@ function setupStoragePathUpdate() {
 function getDynamicSuggestions(searchTerm) {
   const suggestions = [];
   const term = searchTerm.toLowerCase();
+  const scoredSources = [];
   
-  // Add relevant sources based on search term
+  // Score all sources based on relevance
   Object.keys(MEDICAL_WEBSITES).forEach(category => {
     if (category === 'default') return;
     
     const sources = MEDICAL_WEBSITES[category];
     sources.forEach(source => {
-      // Check if search term matches category or source name
-      if (source.name.toLowerCase().includes(term) || 
-          source.description.toLowerCase().includes(term) ||
-          category.includes(term)) {
-        suggestions.push({ ...source, category });
+      let score = 0;
+      
+      // High score for exact name matches
+      if (source.name.toLowerCase().includes(term)) score += 10;
+      
+      // Medium score for description matches
+      if (source.description && source.description.toLowerCase().includes(term)) score += 5;
+      
+      // Medium score for category matches
+      if (category.includes(term)) score += 5;
+      
+      // Lower score for partial matches
+      if (source.name.toLowerCase().split(' ').some(word => word.includes(term))) score += 3;
+      
+      // Category-specific scoring
+      if (category === 'academic' || category === 'journals') score += 2; // Prioritize research sources
+      if (category === 'clinical') score += 1; // Clinical sources are important
+      
+      if (score > 0) {
+        scoredSources.push({ ...source, category, score });
       }
     });
   });
   
-  // Add some default suggestions if no matches
-  if (suggestions.length === 0) {
-    suggestions.push(...MEDICAL_WEBSITES.academic.slice(0, 3));
-    suggestions.push(...MEDICAL_WEBSITES.journals.slice(0, 2));
-    suggestions.push(...MEDICAL_WEBSITES.clinical.slice(0, 2));
+  // Sort by score (highest first)
+  scoredSources.sort((a, b) => b.score - a.score);
+  
+  // If we have scored results, use them
+  if (scoredSources.length > 0) {
+    suggestions.push(...scoredSources.slice(0, 6));
   }
   
-  return suggestions.slice(0, 8); // Limit to 8 suggestions
+  // Always add some high-quality default sources
+  const defaultSources = [
+    ...MEDICAL_WEBSITES.academic.slice(0, 2),
+    ...MEDICAL_WEBSITES.journals.slice(0, 2),
+    ...MEDICAL_WEBSITES.clinical.slice(0, 2)
+  ];
+  
+  // Add defaults that aren't already in suggestions
+  defaultSources.forEach(source => {
+    if (!suggestions.find(s => s.url === source.url)) {
+      suggestions.push({ ...source, category: 'recommended', score: 1 });
+    }
+  });
+  
+  return suggestions.slice(0, 10); // Show up to 10 suggestions
 }
 
 // Enhanced search functionality
@@ -1085,11 +1124,14 @@ function performEnhancedSearch() {
   // Show the suggested sites section
   elements.suggestedSites.style.display = 'block';
   
-  // Show the actions tab after search
+  // Make sure both sub-tabs are visible
   const actionsTab = document.querySelector('[data-subtab="actions"]');
-  if (actionsTab) {
-    actionsTab.style.display = 'block';
-  }
+  const linksTab = document.querySelector('[data-subtab="links"]');
+  if (actionsTab) actionsTab.style.display = 'block';
+  if (linksTab) linksTab.style.display = 'block';
+  
+  // Switch to links tab by default
+  switchToSubTab('links');
 }
 
 // Update sites list with new format
@@ -1099,14 +1141,30 @@ function updateSitesList(suggestions) {
   
   sitesList.innerHTML = '';
   
-  suggestions.forEach(site => {
+  suggestions.forEach((site, index) => {
     const siteItem = document.createElement('div');
     siteItem.className = 'site-item';
+    
+    // Get category emoji
+    const categoryEmojis = {
+      'academic': '🎓',
+      'journals': '📚',
+      'clinical': '🏥',
+      'specialized': '🔬',
+      'mental_health': '🧠',
+      'healthtech': '💻',
+      'general': '🌐',
+      'recommended': '⭐'
+    };
+    
+    const emoji = categoryEmojis[site.category] || '🔗';
+    const scoreText = site.score > 1 ? ` (Score: ${site.score})` : '';
+    
     siteItem.innerHTML = `
       <div class="site-info">
-        <div class="site-name">${site.name}</div>
+        <div class="site-name">${emoji} ${site.name}${scoreText}</div>
         <div class="site-description">${site.description || 'Medical resource'}</div>
-        <div class="site-category">${site.category}</div>
+        <div class="site-category">${site.category.toUpperCase()}</div>
       </div>
       <div class="site-actions">
         <button class="btn btn-primary" onclick="window.open('${site.url}', '_blank')">
@@ -1116,6 +1174,18 @@ function updateSitesList(suggestions) {
     `;
     sitesList.appendChild(siteItem);
   });
+}
+
+// Show default suggestions on load
+function showDefaultSuggestions() {
+  const defaultSuggestions = [
+    ...MEDICAL_WEBSITES.academic.slice(0, 3),
+    ...MEDICAL_WEBSITES.journals.slice(0, 2),
+    ...MEDICAL_WEBSITES.clinical.slice(0, 3)
+  ];
+  
+  updateSitesList(defaultSuggestions);
+  elements.suggestedSites.style.display = 'block';
 }
 
 // Start the application
@@ -1129,4 +1199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.searchButton.removeEventListener('click', performSearch);
     elements.searchButton.addEventListener('click', performEnhancedSearch);
   }
+  
+  // Show default suggestions on load
+  setTimeout(showDefaultSuggestions, 500);
 });
