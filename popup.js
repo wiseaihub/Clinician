@@ -1130,8 +1130,11 @@ function performEnhancedSearch() {
   if (actionsTab) actionsTab.style.display = 'block';
   if (linksTab) linksTab.style.display = 'block';
   
-  // Switch to links tab by default
+  // Switch to links tab to show suggested sites
   switchToSubTab('links');
+  
+  // Show notification
+  showNotification('Suggested medical sources loaded! Click on a website to visit, then use Actions tab to analyze.', 'success');
 }
 
 // Update sites list with new format
@@ -1167,13 +1170,31 @@ function updateSitesList(suggestions) {
         <div class="site-category">${site.category.toUpperCase()}</div>
       </div>
       <div class="site-actions">
-        <button class="btn btn-primary" onclick="window.open('${site.url}', '_blank')">
+        <button class="btn btn-primary" onclick="visitSiteAndActivateActions('${site.url}', '${site.name}')">
           🔗 Visit
         </button>
       </div>
     `;
     sitesList.appendChild(siteItem);
   });
+}
+
+// Visit site and activate actions tab
+function visitSiteAndActivateActions(url, siteName) {
+  // Open the site in a new tab
+  window.open(url, '_blank');
+  
+  // Switch to actions tab
+  switchToSubTab('actions');
+  
+  // Show notification
+  showNotification(`Opened ${siteName}. Use Actions tab to analyze the page.`, 'success');
+  
+  // Enable the analyze button
+  const analyzeButton = document.getElementById('analyzePage');
+  if (analyzeButton) {
+    analyzeButton.disabled = false;
+  }
 }
 
 // Show default suggestions on load
