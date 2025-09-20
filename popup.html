@@ -328,6 +328,40 @@
         transform: translateX(3px);
       }
       
+      .site-status-tags {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+      }
+      
+      .status-tag {
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+      
+      .status-tag.visited {
+        background: rgba(59, 130, 246, 0.2);
+        color: rgba(59, 130, 246, 0.9);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+      }
+      
+      .status-tag.analyzed {
+        background: rgba(16, 185, 129, 0.2);
+        color: rgba(16, 185, 129, 0.9);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+      
+      .status-tag.saved {
+        background: rgba(245, 158, 11, 0.2);
+        color: rgba(245, 158, 11, 0.9);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+      
       .site-status {
         position: absolute;
         right: 10px;
@@ -818,11 +852,13 @@
               <div style="font-size: 12px; opacity: 0.8;">Save research data to local machine</div>
               <div id="storagePath" style="font-size: 11px; opacity: 0.7; margin-top: 5px; display: none;">
                 <span class="emoji">📁</span>Storage Path: 
-                <input type="text" id="storagePathInput" value="Downloads/WISE Clinician Assistant/" 
-                       style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); 
-                              border-radius: 4px; padding: 4px 8px; color: white; font-size: 11px; 
-                              width: 200px; margin-left: 5px;">
-                <button id="updateStoragePath" class="btn btn-primary" style="padding: 4px 8px; font-size: 11px; margin-left: 5px;">Update</button>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+                  <input type="text" id="storagePathInput" value="Downloads/WISE Clinician Assistant/" 
+                         style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); 
+                                border-radius: 4px; padding: 4px 8px; color: white; font-size: 11px; 
+                                width: 200px;" readonly>
+                  <button id="browseStoragePath" class="btn btn-info" style="padding: 4px 8px; font-size: 11px;">📁 Browse</button>
+                </div>
               </div>
             </div>
             <div class="toggle" id="localStorageToggle"></div>
@@ -854,18 +890,18 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
                 <div style="font-weight: 600; color: #1e40af; margin-bottom: 4px;">🏥 WISE Clinical Assistant</div>
-                <div style="font-size: 12px; color: rgba(255, 255, 255, 0.8);">Version 3.5 - Intelligent Medical Research Tool</div>
+                <div style="font-size: 12px; color: rgba(255, 255, 255, 0.8);">Version 3.7 - Intelligent Medical Research Tool</div>
               </div>
               <div style="text-align: right;">
                 <div style="font-size: 11px; color: rgba(59, 130, 246, 0.9);">Latest Release</div>
-                <div style="font-size: 10px; color: rgba(255, 255, 255, 0.6);" id="releaseDate">January 2025</div>
+                <div style="font-size: 10px; color: rgba(255, 255, 255, 0.6);" id="releaseDate">Loading...</div>
               </div>
             </div>
           </div>
           
           <!-- Executive Summary -->
           <div class="executive-summary" style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(16, 185, 129, 0.3);">
-            <div style="font-weight: 600; color: #10b981; margin-bottom: 8px; font-size: 14px;">📋 Version 3.5 Executive Summary</div>
+            <div style="font-weight: 600; color: #10b981; margin-bottom: 8px; font-size: 14px;">📋 Version 3.7 Executive Summary</div>
             <div style="font-size: 12px; color: rgba(255, 255, 255, 0.9); line-height: 1.4;">
               <strong>Key Features:</strong> Dynamic medical source suggestions, intelligent search algorithms, clickable research links, enhanced UI/UX with blue healthcare theme, comprehensive medical database integration, real-time topic-based recommendations, and professional research workflow tools.
             </div>

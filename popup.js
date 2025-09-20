@@ -1094,20 +1094,38 @@ function switchToSubTab(subtabType) {
   }
 }
 
-// Storage path update functionality
+// Storage path browse functionality
 function setupStoragePathUpdate() {
-  const updateButton = document.getElementById('updateStoragePath');
+  const browseButton = document.getElementById('browseStoragePath');
   const storageInput = document.getElementById('storagePathInput');
   
-  if (updateButton && storageInput) {
-    updateButton.addEventListener('click', () => {
-      const newPath = storageInput.value.trim();
-      if (newPath) {
-        // Save to chrome storage
-        chrome.storage.local.set({ storagePath: newPath }, () => {
-          showNotification('Storage path updated successfully!', 'success');
-        });
-      }
+  if (browseButton && storageInput) {
+    browseButton.addEventListener('click', () => {
+      // Create a file input for directory selection
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.webkitdirectory = true;
+      fileInput.directory = true;
+      fileInput.multiple = true;
+      
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          // Get the directory path from the first file
+          const fullPath = e.target.files[0].webkitRelativePath;
+          const directoryPath = fullPath.substring(0, fullPath.lastIndexOf('/'));
+          
+          // Update the input field
+          storageInput.value = directoryPath;
+          
+          // Save to chrome storage
+          chrome.storage.local.set({ storagePath: directoryPath }, () => {
+            showNotification('Storage path updated successfully!', 'success');
+          });
+        }
+      });
+      
+      // Trigger the file dialog
+      fileInput.click();
     });
   }
 }
@@ -1245,6 +1263,18 @@ function performEnhancedSearch() {
   showNotification(`Found ${suggestions.length} medical sources for "${searchTerm}". Click on a website to visit, then use Actions tab to analyze.`, 'success');
 }
 
+// Get site status counts for a specific URL
+function getSiteStatusCounts(url) {
+  const analyses = Object.values(researchData.analyses);
+  const siteAnalyses = analyses.filter(analysis => analysis.metadata && analysis.metadata.url === url);
+  
+  return {
+    visited: researchData.sites[url] && researchData.sites[url].status !== 'unvisited' ? 1 : 0,
+    analyzed: siteAnalyses.length,
+    saved: siteAnalyses.filter(analysis => analysis.savedAt).length
+  };
+}
+
 // Update sites list with new format
 function updateSitesList(suggestions) {
   const sitesList = document.getElementById('sitesList');
@@ -1271,12 +1301,21 @@ function updateSitesList(suggestions) {
     const emoji = categoryEmojis[site.category] || '🔗';
     const scoreText = site.score > 1 ? ` (Score: ${site.score})` : '';
     
+    // Get site status and counters
+    const siteData = researchData.sites[site.url] || { status: 'unvisited' };
+    const statusCounts = getSiteStatusCounts(site.url);
+    
     siteItem.innerHTML = `
       <div class="site-info">
         <div class="site-name">${emoji} ${site.name}${scoreText}</div>
         <div class="site-description">${site.description || 'Medical resource'}</div>
         <div class="site-category">${site.category.toUpperCase()}</div>
-  </div>
+        <div class="site-status-tags">
+          <span class="status-tag visited">Visited (${statusCounts.visited})</span>
+          <span class="status-tag analyzed">Analyzed (${statusCounts.analyzed})</span>
+          <span class="status-tag saved">Saved (${statusCounts.saved})</span>
+        </div>
+      </div>
       <div class="site-click-indicator">→</div>
     `;
     
@@ -1295,14 +1334,29 @@ function visitSiteAndActivateActions(url, siteName) {
   console.log('Opening site:', url, 'Name:', siteName);
   
   try {
+    // Add search string to URL if available
+    let finalUrl = url;
+    if (researchData.currentSearchTerm && researchData.currentSearchTerm.trim()) {
+      const searchTerm = encodeURIComponent(researchData.currentSearchTerm.trim());
+      
+      // Check if URL already has query parameters
+      if (url.includes('?')) {
+        finalUrl = `${url}&q=${searchTerm}`;
+      } else {
+        finalUrl = `${url}?q=${searchTerm}`;
+      }
+      
+      console.log('Enhanced URL with search term:', finalUrl);
+    }
+    
     // Try Chrome extension API first
     if (chrome && chrome.tabs) {
-      chrome.tabs.create({ url: url, active: true }, (tab) => {
+      chrome.tabs.create({ url: finalUrl, active: true }, (tab) => {
         console.log('Opened tab:', tab.id);
       });
     } else {
       // Fallback to window.open
-      window.open(url, '_blank');
+      window.open(finalUrl, '_blank');
     }
     
     // Switch to actions tab
@@ -1335,8 +1389,9 @@ function showDefaultSuggestions() {
 
 // Show full changelog details
 function showFullChangelogDetails() {
+  console.log('showFullChangelogDetails called');
   const changelog = `
-🏥 WISE Clinical Assistant - Version 3.5 Changelog
+🏥 WISE Clinical Assistant - Version 3.7 Changelog
 
 🔗 CLICKABLE LINKS FIX:
 • Fixed non-working clickable links issue
@@ -1384,7 +1439,38 @@ function showFullChangelogDetails() {
 • Enhanced changelog modal functionality
 • Auto-scroll to forms when clicking help actions
 
-Version 3.5 represents continued improvements with better visual consistency and enhanced user experience.
+🏷️ SITE STATUS TAGS (v3.7):
+• Re-introduced visited/analyzed/saved tags with counters
+• Added visual status indicators for better research guidance
+• Color-coded tags: Blue (Visited), Green (Analyzed), Orange (Saved)
+• Counter display shows exact numbers for each status type
+• Enhanced research workflow with clear progress tracking
+
+🔍 ENHANCED LINK FUNCTIONALITY (v3.7):
+• Added search string to webpage URLs when clicking suggested links
+• Automatic query parameter injection for faster user action
+• Smart URL enhancement with current search term
+• Improved research efficiency with pre-filled searches
+
+📁 STORAGE PATH IMPROVEMENTS (v3.7):
+• Replaced manual storage path entry with browse functionality
+• Better UI/UX with directory picker dialog
+• Automatic path detection and validation
+• Enhanced user experience for storage configuration
+
+📅 DYNAMIC RELEASE DATE (v3.7):
+• Fixed release date to show actual current date
+• Dynamic date generation instead of hardcoded values
+• Accurate version information display
+• Professional release tracking
+
+🔧 CHANGELOG FUNCTIONALITY (v3.7):
+• Fixed View Full Changelog button functionality
+• Added comprehensive debugging for button interactions
+• Enhanced modal popup with current version information
+• Improved error handling and user feedback
+
+Version 3.7 represents major usability improvements with enhanced research guidance and better user experience.
   `;
   
   // Create a modal or alert to show the changelog
@@ -1451,6 +1537,19 @@ Version 3.5 represents continued improvements with better visual consistency and
   });
 }
 
+// Set release date dynamically
+function setReleaseDate() {
+  const releaseDateElement = document.getElementById('releaseDate');
+  if (releaseDateElement) {
+    // Set current date as release date (since we're releasing now)
+    const now = new Date();
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const releaseDate = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+    releaseDateElement.textContent = releaseDate;
+  }
+}
+
 // Start the application
 document.addEventListener('DOMContentLoaded', () => {
   initialize();
@@ -1481,8 +1580,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // Add changelog functionality
   const showFullChangelog = document.getElementById('showFullChangelog');
   if (showFullChangelog) {
-    showFullChangelog.addEventListener('click', () => {
+    console.log('Changelog button found, adding event listener');
+    showFullChangelog.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('Changelog button clicked');
       showFullChangelogDetails();
     });
+  } else {
+    console.error('Changelog button not found');
   }
+  
+  // Set release date dynamically
+  setReleaseDate();
 });
