@@ -98,7 +98,8 @@ const MEDICAL_WEBSITES = {
   // General Medical Information
   'general': [
     { name: 'WebMD', url: 'https://www.webmd.com/', category: 'general', description: 'General medical information' },
-    { name: 'Abortion Finder', url: 'https://www.abortionfinder.org/', category: 'general', description: 'Reproductive health services' }
+    { name: 'Abortion Finder', url: 'https://www.abortionfinder.org/', category: 'general', description: 'Reproductive health services' },
+    { name: 'Campaign Against Living Miserably', url: 'https://www.thecalmzone.net/', category: 'general', description: 'Mental health support' }
   ],
   
   // Default fallback
@@ -633,7 +634,7 @@ function generateTopicInsights(analyses) {
     
     insightsHtml += `
       <div class="insight-item" style="margin-bottom: 20px;">
-        <div style="font-weight: 600; font-size: 16px; margin-bottom: 10px; color: #10b981;">
+        <div style="font-weight: 600; font-size: 16px; margin-bottom: 10px; color: #1e40af;">
           📊 ${topic.charAt(0).toUpperCase() + topic.slice(1)} Research Analysis
         </div>
         
@@ -1075,12 +1076,40 @@ function setupStoragePathUpdate() {
   }
 }
 
+// Medical condition to source mapping
+const MEDICAL_CONDITION_MAPPING = {
+  'diabetes': ['academic', 'journals', 'clinical', 'specialized'],
+  'cancer': ['academic', 'journals', 'clinical', 'specialized'],
+  'mental health': ['mental_health', 'academic', 'journals'],
+  'depression': ['mental_health', 'academic', 'journals'],
+  'anxiety': ['mental_health', 'academic', 'journals'],
+  'fertility': ['specialized', 'clinical', 'academic'],
+  'reproductive': ['specialized', 'clinical', 'academic'],
+  'dental': ['specialized', 'clinical'],
+  'heart': ['clinical', 'academic', 'journals'],
+  'cardiovascular': ['clinical', 'academic', 'journals'],
+  'covid': ['academic', 'journals', 'clinical'],
+  'pandemic': ['academic', 'journals', 'clinical'],
+  'research': ['academic', 'journals'],
+  'study': ['academic', 'journals'],
+  'treatment': ['clinical', 'academic', 'journals'],
+  'diagnosis': ['clinical', 'academic', 'journals']
+};
+
 // Dynamic link suggestions based on search
 function getDynamicSuggestions(searchTerm) {
   console.log('Getting dynamic suggestions for:', searchTerm);
   const suggestions = [];
   const term = searchTerm.toLowerCase();
   const scoredSources = [];
+  
+  // Check for medical condition matches
+  const relevantCategories = [];
+  Object.keys(MEDICAL_CONDITION_MAPPING).forEach(condition => {
+    if (term.includes(condition)) {
+      relevantCategories.push(...MEDICAL_CONDITION_MAPPING[condition]);
+    }
+  });
   
   // Score all sources based on relevance
   Object.keys(MEDICAL_WEBSITES).forEach(category => {
@@ -1091,20 +1120,24 @@ function getDynamicSuggestions(searchTerm) {
       let score = 0;
       
       // High score for exact name matches
-      if (source.name.toLowerCase().includes(term)) score += 10;
+      if (source.name.toLowerCase().includes(term)) score += 15;
       
       // Medium score for description matches
-      if (source.description && source.description.toLowerCase().includes(term)) score += 5;
+      if (source.description && source.description.toLowerCase().includes(term)) score += 8;
       
       // Medium score for category matches
-      if (category.includes(term)) score += 5;
+      if (category.includes(term)) score += 8;
       
       // Lower score for partial matches
-      if (source.name.toLowerCase().split(' ').some(word => word.includes(term))) score += 3;
+      if (source.name.toLowerCase().split(' ').some(word => word.includes(term))) score += 5;
+      
+      // Boost score for relevant medical condition categories
+      if (relevantCategories.includes(category)) score += 10;
       
       // Category-specific scoring
-      if (category === 'academic' || category === 'journals') score += 2; // Prioritize research sources
-      if (category === 'clinical') score += 1; // Clinical sources are important
+      if (category === 'academic' || category === 'journals') score += 3; // Prioritize research sources
+      if (category === 'clinical') score += 2; // Clinical sources are important
+      if (category === 'specialized') score += 1; // Specialized sources
       
       if (score > 0) {
         scoredSources.push({ ...source, category, score });
@@ -1123,12 +1156,14 @@ function getDynamicSuggestions(searchTerm) {
   }
   
   // Always add some high-quality default sources if we have few matches
-  if (suggestions.length < 5) {
+  if (suggestions.length < 8) {
     const defaultSources = [
-      ...MEDICAL_WEBSITES.academic.slice(0, 3),
-      ...MEDICAL_WEBSITES.journals.slice(0, 2),
-      ...MEDICAL_WEBSITES.clinical.slice(0, 3),
-      ...MEDICAL_WEBSITES.specialized.slice(0, 2)
+      ...MEDICAL_WEBSITES.academic.slice(0, 4),
+      ...MEDICAL_WEBSITES.journals.slice(0, 3),
+      ...MEDICAL_WEBSITES.clinical.slice(0, 4),
+      ...MEDICAL_WEBSITES.specialized.slice(0, 2),
+      ...MEDICAL_WEBSITES.mental_health.slice(0, 2),
+      ...MEDICAL_WEBSITES.healthtech.slice(0, 2)
     ];
     
     // Add defaults that aren't already in suggestions
