@@ -1252,16 +1252,12 @@ function updateSitesList(suggestions) {
     const scoreText = site.score > 1 ? ` (Score: ${site.score})` : '';
     
     siteItem.innerHTML = `
-      <div class="site-info">
+      <div class="site-info" onclick="visitSiteAndActivateActions('${site.url}', '${site.name}')" style="cursor: pointer;">
         <div class="site-name">${emoji} ${site.name}${scoreText}</div>
         <div class="site-description">${site.description || 'Medical resource'}</div>
         <div class="site-category">${site.category.toUpperCase()}</div>
       </div>
-      <div class="site-actions">
-        <button class="btn btn-primary" onclick="visitSiteAndActivateActions('${site.url}', '${site.name}')">
-          🔗 Visit
-        </button>
-      </div>
+      <div class="site-click-indicator">→</div>
     `;
     sitesList.appendChild(siteItem);
   });
@@ -1269,19 +1265,30 @@ function updateSitesList(suggestions) {
 
 // Visit site and activate actions tab
 function visitSiteAndActivateActions(url, siteName) {
-  // Open the site in a new tab
-  window.open(url, '_blank');
+  console.log('Opening site:', url, 'Name:', siteName);
   
-  // Switch to actions tab
-  switchToSubTab('actions');
-  
-  // Show notification
-  showNotification(`Opened ${siteName}. Use Actions tab to analyze the page.`, 'success');
-  
-  // Enable the analyze button
-  const analyzeButton = document.getElementById('analyzePage');
-  if (analyzeButton) {
-    analyzeButton.disabled = false;
+  try {
+    // Open the site in a new tab
+    window.open(url, '_blank');
+    
+    // Switch to actions tab
+    switchToSubTab('actions');
+    
+    // Show notification
+    showNotification(`Opened ${siteName}. Use Actions tab to analyze the page.`, 'success');
+    
+    // Enable the analyze button
+    const analyzeButton = document.getElementById('analyzePage');
+    if (analyzeButton) {
+      analyzeButton.disabled = false;
+    }
+    
+    // Update site status to visited
+    updateSiteStatus(url, 'visited');
+    
+  } catch (error) {
+    console.error('Error opening site:', error);
+    showNotification('Failed to open site. Please try again.', 'error');
   }
 }
 
