@@ -308,12 +308,12 @@ function showSuggestedSites() {
       <div>
         <strong>${site.name}</strong>
         <div style="font-size: 12px; opacity: 0.8;">${site.category} • ${site.url}</div>
-      </div>
+    </div>
       <div class="site-status status-${site.status}">
         ${site.status === 'unvisited' ? 'New' : 
           site.status === 'visited' ? 'Visited' :
           site.status === 'analyzed' ? 'Analyzed' : 'Saved'}
-      </div>
+    </div>
     </div>
   `).join('');
   
@@ -368,7 +368,7 @@ async function getPageMetadata() {
     };
   } catch (error) {
     console.error('Error getting page metadata:', error);
-    return {
+  return {
       url: 'Unknown',
       title: 'Unknown',
       searchContext: null,
@@ -597,7 +597,7 @@ function updateRepositoryDisplay() {
   
   elements.repoList.innerHTML = Object.entries(groupedByTopic).map(([topic, items]) => `
     <div class="repo-item">
-      <h4>${topic} (${items.length} items)</h4>
+      <h4 style="color: #1e40af; font-weight: 600;">${topic} (${items.length} items)</h4>
       ${items.slice(0, 5).map(item => `
         <div style="margin: 8px 0; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 6px;">
           <div style="font-weight: 500; font-size: 13px;">${item.title}</div>
@@ -640,9 +640,16 @@ function generateTopicInsights(analyses) {
     return acc;
   }, {});
   
+  // Sort topics by most recent analysis date (reverse chronological)
+  const sortedTopics = Object.entries(topicGroups).sort(([, itemsA], [, itemsB]) => {
+    const latestA = Math.max(...itemsA.map(item => new Date(item.savedAt).getTime()));
+    const latestB = Math.max(...itemsB.map(item => new Date(item.savedAt).getTime()));
+    return latestB - latestA; // Newest first
+  });
+  
   let insightsHtml = '';
   
-  Object.entries(topicGroups).forEach(([topic, items]) => {
+  sortedTopics.forEach(([topic, items]) => {
     const analysis = analyzeTopicData(topic, items);
     
     insightsHtml += `
@@ -913,14 +920,17 @@ function initializeEventListeners() {
   
   elements.reportBug.addEventListener('click', () => {
     showFeedbackForm('Bug Report');
+    scrollToFeedbackForm();
   });
   
   elements.requestFeature.addEventListener('click', () => {
     showFeedbackForm('Feature Request');
+    scrollToFeedbackForm();
   });
   
   elements.betaProgram.addEventListener('click', () => {
     showFeedbackForm('Beta Program');
+    scrollToFeedbackForm();
   });
   
   elements.submitFeedback.addEventListener('click', submitFeedback);
@@ -930,6 +940,16 @@ function showFeedbackForm(type) {
   elements.feedbackTitle.textContent = type;
   elements.feedbackType.value = type;
   elements.feedbackForm.style.display = 'block';
+}
+
+function scrollToFeedbackForm() {
+  // Scroll to the feedback form with smooth animation
+  setTimeout(() => {
+    elements.feedbackForm.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'start' 
+    });
+  }, 100); // Small delay to ensure form is visible first
 }
 
 // Email validation function
@@ -1256,7 +1276,7 @@ function updateSitesList(suggestions) {
         <div class="site-name">${emoji} ${site.name}${scoreText}</div>
         <div class="site-description">${site.description || 'Medical resource'}</div>
         <div class="site-category">${site.category.toUpperCase()}</div>
-      </div>
+  </div>
       <div class="site-click-indicator">→</div>
     `;
     
@@ -1316,7 +1336,7 @@ function showDefaultSuggestions() {
 // Show full changelog details
 function showFullChangelogDetails() {
   const changelog = `
-🏥 WISE Clinical Assistant - Version 3.4 Changelog
+🏥 WISE Clinical Assistant - Version 3.5 Changelog
 
 🔗 CLICKABLE LINKS FIX:
 • Fixed non-working clickable links issue
@@ -1357,7 +1377,14 @@ function showFullChangelogDetails() {
 • Added full changelog functionality
 • Professional release information display
 
-Version 3.4 represents a major stability and usability improvement with fully functional clickable links and enhanced user experience.
+🎨 UI/UX IMPROVEMENTS (v3.5):
+• Made repository topic headers blue for better visibility
+• Added reverse chronological ordering to insights display
+• Fixed release date display to show current date
+• Enhanced changelog modal functionality
+• Auto-scroll to forms when clicking help actions
+
+Version 3.5 represents continued improvements with better visual consistency and enhanced user experience.
   `;
   
   // Create a modal or alert to show the changelog
