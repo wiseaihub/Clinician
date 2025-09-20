@@ -264,7 +264,15 @@ function setCurrentTopic(topic) {
   elements.topicName.textContent = topic;
   elements.currentTopic.style.display = 'block';
   updateTopicStats();
-  showSuggestedSites();
+  
+  // Use dynamic suggestions instead of static ones
+  if (topic && topic.length > 2) {
+    const suggestions = getDynamicSuggestions(topic);
+    updateSitesList(suggestions);
+    elements.suggestedSites.style.display = 'block';
+    switchToSubTab('links');
+  }
+  
   saveResearchData(); // Save the search term
 }
 
@@ -337,7 +345,12 @@ function updateSiteStatus(url, status) {
   }
   
   saveResearchData();
-  showSuggestedSites(); // Refresh the display
+  
+  // Refresh the display with dynamic suggestions if we have a current topic
+  if (currentTopic && currentTopic.length > 2) {
+    const suggestions = getDynamicSuggestions(currentTopic);
+    updateSitesList(suggestions);
+  }
 }
 
 // ==================== ANALYSIS FUNCTIONS ====================
@@ -1000,6 +1013,9 @@ async function initialize() {
       elements.diseaseSearch.value = researchData.currentSearchTerm;
       setCurrentTopic(researchData.currentSearchTerm);
       elements.changeTopic.style.display = 'inline-block';
+    } else {
+      // Hide suggestions by default until user searches
+      elements.suggestedSites.style.display = 'none';
     }
     
     // Initialize displays
@@ -1301,6 +1317,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Show default suggestions on load
-  setTimeout(showDefaultSuggestions, 500);
+  // No need to show default suggestions - handled in initialization
 });
