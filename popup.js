@@ -1252,13 +1252,20 @@ function updateSitesList(suggestions) {
     const scoreText = site.score > 1 ? ` (Score: ${site.score})` : '';
     
     siteItem.innerHTML = `
-      <div class="site-info" onclick="visitSiteAndActivateActions('${site.url}', '${site.name}')" style="cursor: pointer;">
+      <div class="site-info">
         <div class="site-name">${emoji} ${site.name}${scoreText}</div>
         <div class="site-description">${site.description || 'Medical resource'}</div>
         <div class="site-category">${site.category.toUpperCase()}</div>
       </div>
       <div class="site-click-indicator">→</div>
     `;
+    
+    // Add click event listener to the entire site item
+    siteItem.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('Site item clicked:', site.name, site.url);
+      visitSiteAndActivateActions(site.url, site.name);
+    });
     sitesList.appendChild(siteItem);
   });
 }
@@ -1268,8 +1275,15 @@ function visitSiteAndActivateActions(url, siteName) {
   console.log('Opening site:', url, 'Name:', siteName);
   
   try {
-    // Open the site in a new tab
-    window.open(url, '_blank');
+    // Try Chrome extension API first
+    if (chrome && chrome.tabs) {
+      chrome.tabs.create({ url: url, active: true }, (tab) => {
+        console.log('Opened tab:', tab.id);
+      });
+    } else {
+      // Fallback to window.open
+      window.open(url, '_blank');
+    }
     
     // Switch to actions tab
     switchToSubTab('actions');
@@ -1299,6 +1313,117 @@ function showDefaultSuggestions() {
   elements.suggestedSites.style.display = 'none';
 }
 
+// Show full changelog details
+function showFullChangelogDetails() {
+  const changelog = `
+🏥 WISE Clinical Assistant - Version 3.4 Changelog
+
+🔗 CLICKABLE LINKS FIX:
+• Fixed non-working clickable links issue
+• Replaced onclick attributes with proper event listeners
+• Made entire site items clickable for better UX
+• Added Chrome extension API support for tab creation
+• Enhanced error handling and debugging
+
+🎨 UI/UX IMPROVEMENTS:
+• Removed redundant "Visit" button text
+• Added visual click indicator (→) with hover animations
+• Enhanced site-item styling with better padding and borders
+• Added blue hover effects with smooth transitions
+• Improved typography and visual feedback
+
+🔍 DYNAMIC SUGGESTIONS ENHANCEMENT:
+• Fixed static site list issue completely
+• Implemented intelligent medical condition mapping
+• Enhanced scoring algorithm with medical context awareness
+• Added comprehensive medical source database
+• Real-time suggestions based on search terms
+
+📊 TOPIC HEADERS VISIBILITY:
+• Changed topic research analysis headers to blue (#1e40af)
+• Better contrast against background gradient
+• Improved readability in Insights tab
+
+🎯 TECHNICAL IMPROVEMENTS:
+• Enhanced error handling throughout the application
+• Added comprehensive console logging for debugging
+• Improved function structure with try-catch blocks
+• Better Chrome extension API integration
+• Optimized performance and reliability
+
+📋 HELP TAB ENHANCEMENTS:
+• Added version information display
+• Included executive summary of changes
+• Added full changelog functionality
+• Professional release information display
+
+Version 3.4 represents a major stability and usability improvement with fully functional clickable links and enhanced user experience.
+  `;
+  
+  // Create a modal or alert to show the changelog
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+  `;
+  
+  const content = document.createElement('div');
+  content.style.cssText = `
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-line;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+  `;
+  
+  content.textContent = changelog;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕ Close';
+  closeBtn.style.cssText = `
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(239, 68, 68, 0.8);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+  `;
+  
+  closeBtn.addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  content.appendChild(closeBtn);
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+  
+  // Close on background click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
+}
+
 // Start the application
 document.addEventListener('DOMContentLoaded', () => {
   initialize();
@@ -1325,4 +1450,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   // No need to show default suggestions - handled in initialization
+  
+  // Add changelog functionality
+  const showFullChangelog = document.getElementById('showFullChangelog');
+  if (showFullChangelog) {
+    showFullChangelog.addEventListener('click', () => {
+      showFullChangelogDetails();
+    });
+  }
 });
