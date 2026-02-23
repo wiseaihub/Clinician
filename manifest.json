@@ -3,14 +3,8 @@
   "name": "WISE Clinical Assistant",
   "version": "3.7",
   "description": "Clinical research tool",
-  "permissions": [
-    "activeTab",
-    "scripting",
-    "storage",
-    "downloads",
-    "tabs"
-  ],
   "action": {
+    "default_title": "WISE Clinical Assistant",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "images/simple_w_icon.svg",
@@ -22,5 +16,51 @@
     "16": "images/simple_w_icon.svg",
     "32": "images/simple_w_icon.svg",
     "48": "images/simple_w_icon.svg"
-  }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "downloads",
+    "tabs",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://dev.wisedoctor.in/*",
+    "https://serpapi.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://dev.wisedoctor.in/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "popup.js",
+        "popup.css",
+        "content.js",
+        "report.html",
+        "repository.html",
+        "payloads.html",
+        "assets/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
